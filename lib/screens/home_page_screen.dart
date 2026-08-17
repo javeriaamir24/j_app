@@ -15,6 +15,9 @@ import 'about_us_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_conditions_page.dart';
 import 'package:j_app/data/coffee_list.dart';
+import 'package:j_app/data/wishlist_data.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 
 class HomePage extends StatefulWidget {
 
@@ -34,6 +37,8 @@ class _HomePageState extends  State<HomePage>{
   String selectedCoffee = "All Coffee";
   String selectedPriceRange = "All";
   TextEditingController searchController = TextEditingController();
+
+
 
 
   @override
@@ -127,6 +132,33 @@ class _HomePageState extends  State<HomePage>{
           ),
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.all (10),
+            child: Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                color: const Color(0xFFC67C4E),
+                borderRadius: BorderRadius.circular(15),
+              ),
+
+              child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WishlistPage(),
+                    ),
+                  );
+
+                },
+                icon: const Icon(
+                  Icons.favorite_rounded, color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+
           Padding(
             padding: const EdgeInsets.only(right: 15),
             child: Container(
@@ -590,15 +622,65 @@ class _HomePageState extends  State<HomePage>{
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
 
+
                               children: [
 
-                                Image.asset(
-                                  coffee["image"],
-                                  height: 120,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
+                                Stack(
+                                  children: [
+                                    Image.asset(
+                                      coffee["image"],
+                                      height: 120,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
 
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: ValueListenableBuilder(
+                                          valueListenable: wishlistBox.listenable(),
+                                          builder: (context, box, _) {
+                                            final isFavorite =
+                                            isWishlisted(coffee["name"]);
+
+                                            return IconButton(
+                                              onPressed: () {
+                                                if (isFavorite) {
+                                                  removeFromWishlist(
+                                                    coffee["name"],
+                                                  );
+
+                                                  Fluttertoast.showToast(
+                                                    msg: "Removed from Wishlist",
+                                                  );
+                                                } else {
+                                                  addToWishlist(coffee);
+
+                                                  Fluttertoast.showToast(
+                                                    msg: "Added to Wishlist",
+                                                  );
+                                                }
+                                              },
+                                              icon: Icon(
+                                                isFavorite
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color: isFavorite
+                                                    ? const Color(0xFFC67C4E)
+                                                    : Colors.grey,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 Padding(
                                   padding: const EdgeInsets.all(10),
 
@@ -734,11 +816,61 @@ class _HomePageState extends  State<HomePage>{
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
 
-                                Image.asset(
-                                  coffee["image"],
-                                  height: 150,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
+                                Stack(
+                                  children: [
+                                    Image.asset(
+                                      coffee["image"],
+                                      height: 120,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: ValueListenableBuilder(
+                                          valueListenable: wishlistBox.listenable(),
+                                          builder: (context, box, _) {
+                                            final isFavorite =
+                                            isWishlisted(coffee["name"]);
+
+                                            return IconButton(
+                                              onPressed: () {
+                                                if (isFavorite) {
+                                                  removeFromWishlist(
+                                                    coffee["name"],
+                                                  );
+
+                                                  Fluttertoast.showToast(
+                                                    msg: "Removed from Wishlist",
+                                                  );
+                                                } else {
+                                                  addToWishlist(coffee);
+
+                                                  Fluttertoast.showToast(
+                                                    msg: "Added to Wishlist",
+                                                  );
+                                                }
+                                              },
+                                              icon: Icon(
+                                                isFavorite
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color: isFavorite
+                                                    ? const Color(0xFFC67C4E)
+                                                    : Colors.grey,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
 
                                 Padding(

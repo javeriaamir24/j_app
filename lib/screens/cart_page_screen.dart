@@ -47,20 +47,14 @@ class _CartPageState extends State<CartPage> {
               Expanded(
                 child: ListView.builder(
                   itemCount: items.length,
-
                   itemBuilder: (context, index) {
-
                     final item = items[index];
-
                     return Card(
                       margin: const EdgeInsets.all(10),
-
                       child: Padding(
                         padding: const EdgeInsets.all(10),
-
                         child: Row(
                           children: [
-
                             Image.asset(
                               item["image"],
                               width: 80,
@@ -74,9 +68,7 @@ class _CartPageState extends State<CartPage> {
                               child: Column(
                                 crossAxisAlignment:
                                 CrossAxisAlignment.start,
-
                                 children: [
-
                                   Text(
                                     item["name"],
                                     style: const TextStyle(
@@ -88,34 +80,27 @@ class _CartPageState extends State<CartPage> {
                                   Text(
                                     "\$${item["price"]}",
                                   ),
-
                                   Row(
                                     children: [
-
                                       IconButton(
                                         onPressed: () {
                                           decreaseQuantity(index);
                                         },
-
                                         icon: const Icon(
                                           Icons.remove,
                                         ),
                                       ),
-
                                       Text(
                                         "${item["quantity"]}",
-
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-
                                       IconButton(
                                         onPressed: () {
                                           increaseQuantity(index);
                                         },
-
                                         icon: const Icon(
                                           Icons.add,
                                         ),
@@ -128,10 +113,8 @@ class _CartPageState extends State<CartPage> {
                                         onPressed: () {
                                           removeFromCart(item);
                                         },
-
                                       ),
                                     ],
-
                                   ),
 
                                 ],
@@ -153,20 +136,15 @@ class _CartPageState extends State<CartPage> {
                   MainAxisAlignment.spaceBetween,
 
                   children: [
-
                     const Text(
                       "Total:",
-
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     Text(
-                      "\$${totalPrice.toStringAsFixed(2)}",
-
-                      style: const TextStyle(
+                      "\$${totalPrice.toStringAsFixed(2)}",style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -181,7 +159,6 @@ class _CartPageState extends State<CartPage> {
                   left: 20,
                   right: 20,
                 ),
-
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -191,7 +168,6 @@ class _CartPageState extends State<CartPage> {
                       backgroundColor: const Color(0xFFC67C4E),
                       foregroundColor: Colors.white,
                     ),
-
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -221,14 +197,11 @@ class _CartPageState extends State<CartPage> {
   }
 
   double get totalPrice {
-
     double total = 0;
-
     for (var item in cartItems) {
       total +=
           item["price"] * item["quantity"];
     }
-
     return total;
   }
 }

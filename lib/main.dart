@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:j_app/screens/customer_chat.dart';
 import 'package:j_app/screens/home_page_screen.dart';
 import 'package:j_app/screens/order_history_page.dart';
 import 'package:j_app/screens/splash_screen.dart';
@@ -7,8 +8,8 @@ import 'firebase_options.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:j_app/screens/profile_page_screen.dart';
 import 'package:j_app/screens/cart_page_screen.dart';
-import 'package:j_app/screens/order_history_page.dart';
-import 'package:j_app/screens/wish_list_page.dart';
+import 'package:j_app/screens/customer_chat.dart';
+
 
 
 void main() async {
@@ -33,9 +34,10 @@ void main() async {
       routes: {
         '/home': (context) => const HomePage(),
         '/cart': (context) => const CartPage(),
-        '/profile': (context) => const ProfilePage(),
         '/order': (context) => const OrderHistoryPage(),
-        '/wish': (context) => const WishlistPage(),
+        '/chat': (context) => const CustomerChat(),
+        '/profile': (context) => const ProfilePage(),
+
 
 
       },

@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+
 import 'signup_page_screen.dart';
 import 'forget_password_page.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'home_page_screen.dart';
-
+import 'admin_users_page.dart';
+import 'first_Screen.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
@@ -216,15 +219,12 @@ class _LoginPageState extends State<LoginPage>
     });
 
     try {
-
       UserCredential userCredential =
       await auth.signInWithEmailAndPassword(
         email: typedEmail,
         password: typedPassword,
       );
-
       User? user = userCredential.user;
-
       if (user == null) {
         throw Exception("User not found");
       }
@@ -233,26 +233,72 @@ class _LoginPageState extends State<LoginPage>
 
       user = auth.currentUser;
 
-      if (user != null &&
-          user.emailVerified) {
-
-        await _storage.write(
-          key: 'saved_email',
-          value: typedEmail,
-        );
-
-        await _storage.write(
-          key: 'saved_password',
-          value: typedPassword,
-        );
-
-        if (!mounted) {
-          return;
+      if (user == null ||
+          !user.emailVerified) {
+        await auth.signOut();
+        if (mounted) {
+          Fluttertoast.showToast(
+            msg: "Verify your email first",
+          );
         }
+        return;
+      }
+      await _storage.write(
+        key: 'saved_email',
+        value: typedEmail,
+      );
+      await _storage.write(
+        key: 'saved_password',
+        value: typedPassword,
+      );
+      final DatabaseReference userRef =
+      FirebaseDatabase.instance
+          .ref("users/${user.uid}");
+      final DataSnapshot snapshot =
+      await userRef.get();
+      if (!snapshot.exists) {
+        if (mounted) {
+          Fluttertoast.showToast(
+            msg: "User data not found",
+          );
+        }
+        return;
+      }
 
-        Fluttertoast.showToast(
-          msg: "Logged In Successfully",
+      final Map<dynamic, dynamic> userData =
+      Map<dynamic, dynamic>.from(
+        snapshot.value as Map,
+      );
+      final String? role =
+      userData["role"]
+          ?.toString()
+          .toLowerCase();
+
+      print("LOGIN EMAIL: ${user.email}");
+      print("LOGIN UID: ${user.uid}");
+      print("USER ROLE: $role");
+
+      Fluttertoast.showToast(
+        msg: "Logged In Successfully",
+      );
+
+      if (!mounted) {
+        return;
+      }if (role == "admin") {
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+            const AdminUsersPage(),
+          ),
+              (route) => false,
         );
+
+        return;
+      }
+
+      if (role == "customer") {
 
         Navigator.pushAndRemoveUntil(
           context,
@@ -263,15 +309,23 @@ class _LoginPageState extends State<LoginPage>
               (route) => false,
         );
 
-      } else {
+        return;
+      }
+      await auth.signOut();
 
-        await auth.signOut();
+      if (mounted) {
+        Fluttertoast.showToast(
+          msg: "Invalid user role",
+        );
 
-        if (mounted) {
-          Fluttertoast.showToast(
-            msg: "Verify your email first",
-          );
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+            const FirstScreen(),
+          ),
+              (route) => false,
+        );
       }
 
     } on FirebaseAuthException catch (e) {
@@ -307,6 +361,8 @@ class _LoginPageState extends State<LoginPage>
 
     } catch (e) {
 
+      print("LOGIN ERROR: $e");
+
       if (mounted) {
         Fluttertoast.showToast(
           msg: "An Unexpected Error Occurred",
@@ -322,5 +378,4 @@ class _LoginPageState extends State<LoginPage>
       }
     }
   }
-
 }

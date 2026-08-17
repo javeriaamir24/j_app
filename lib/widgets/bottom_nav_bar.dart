@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:j_app/data/cart_data.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:j_app/screens/customer_chat.dart';
 
 class BottomNavBar extends StatelessWidget {
 
@@ -11,36 +12,68 @@ class BottomNavBar extends StatelessWidget {
     required this.selectedIndex,
   });
 
+  // void navigate(BuildContext context, int index) {
+  //
+  //   if (index == selectedIndex) {
+  //     return;
+  //   }
+  //
+  //   if (index == 0) {
+  //     Navigator.pushNamed(context, '/home');
+  //   }
+  //
+  //
+  //   if (index == 1) {
+  //     Navigator.pushNamed(context, '/cart');
+  //   }
+  //
+  //   if (index == 2) {
+  //     Navigator.pushNamed(context, '/order');
+  //   }
+  //
+  //   if (index == 3) {
+  //     Navigator.pushNamed(context, '/chat');
+  //   }
+  //
+  //   if (index == 4) {
+  //     Navigator.pushNamed(context, '/profile');
+  //   }
+  //
+  //
+  // }
   void navigate(BuildContext context, int index) {
+    print("BOTTOM NAV INDEX: $index");
 
     if (index == selectedIndex) {
       return;
     }
 
-    if (index == 0) {
-      Navigator.pushNamed(context, '/home');
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+
+      case 1:
+        Navigator.pushReplacementNamed(context, '/cart');
+        break;
+
+      case 2:
+        Navigator.pushReplacementNamed(context, '/order');
+        break;
+
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CustomerChat(),
+          ),
+        );        break;
+
+      case 4:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
     }
-
-
-    if (index == 1) {
-      Navigator.pushNamed(context, '/cart');
-    }
-
-    if (index == 2) {
-      Navigator.pushNamed(context, '/order');
-    }
-
-    if (index == 3) {
-      Navigator.pushNamed(context, '/wish');
-    }
-
-    if (index == 4) {
-      Navigator.pushNamed(context, '/profile');
-    }
-
-
   }
-
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
@@ -106,9 +139,10 @@ class BottomNavBar extends StatelessWidget {
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(Icons.favorite),
-          label: "WishList",
+          icon: Icon(Icons.chat_bubble),
+          label: "Chat",
         ),
+
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
           label: "Profile",

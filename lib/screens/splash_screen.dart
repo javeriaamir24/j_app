@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 import 'first_Screen.dart';
 import 'saved_screen.dart';
 import 'home_page_screen.dart';
+import 'admin_users_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,8 +17,7 @@ class SplashScreen extends StatefulWidget {
       _SplashScreenState();
 }
 
-class _SplashScreenState
-    extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> {
 
   final FlutterSecureStorage _storage =
   const FlutterSecureStorage();
@@ -32,33 +34,72 @@ class _SplashScreenState
       const Duration(seconds: 2),
     );
 
-    final String? remember =
-    await _storage.read(
-      key: 'remember_login',
-    );
-
     if (!mounted) {
-      return;
-    }
-
-    if (remember == 'true') {
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-          const SavedScreen(),
-        ),
-      );
-
       return;
     }
 
     final User? user =
         FirebaseAuth.instance.currentUser;
 
-    if (user != null &&
-        user.emailVerified) {
+    if (user == null || !user.emailVerified) {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+          const FirstScreen(),
+        ),
+      );
+
+      return;
+    }
+
+    final snapshot = await FirebaseDatabase.instance
+        .ref("users/${user.uid}/role")
+        .get();
+
+    final role = snapshot.value?.toString();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (role == "admin") {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+          const AdminUsersPage(),
+        ),
+      );
+
+      return;
+    }
+
+    if (role == "customer") {
+
+      final String? remember =
+      await _storage.read(
+        key: 'remember_login',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (remember == 'true') {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+            const SavedScreen(),
+          ),
+        );
+
+        return;
+      }
 
       Navigator.pushReplacement(
         context,
@@ -70,6 +111,7 @@ class _SplashScreenState
 
       return;
     }
+    await FirebaseAuth.instance.signOut();
 
     Navigator.pushReplacement(
       context,
@@ -82,6 +124,7 @@ class _SplashScreenState
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: Center(
         child: Image.asset(

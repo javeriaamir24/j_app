@@ -347,6 +347,8 @@ bool hidden2 = true;
           "name": name,
           "email": email,
           "password": password,
+          "role": "customer",
+
         });
       }
       //------------------connecting real time data base------------

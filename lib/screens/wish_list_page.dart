@@ -82,7 +82,7 @@ class WishlistPage extends StatelessWidget {
         },
       ),
       bottomNavigationBar: const BottomNavBar(
-        selectedIndex: 3,
+        selectedIndex: 0,
       ),
     );
   }
