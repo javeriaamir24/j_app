@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'signup_page_screen.dart';
 import 'forget_password_page.dart';
-import 'home_page_screen.dart';
-import 'admin_users_page.dart';
+import 'customer/home_page_screen.dart';
+import 'admin/users_page.dart';
 import 'first_Screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -290,7 +290,7 @@ class _LoginPageState extends State<LoginPage>
           context,
           MaterialPageRoute(
             builder: (context) =>
-            const AdminUsersPage(),
+            const UsersPage(),
           ),
               (route) => false,
         );

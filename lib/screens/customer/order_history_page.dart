@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:j_app/data/order_data.dart';
-import 'package:j_app/widgets/bottom_nav_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:j_app/widgets/customers_bottom_nav_bar.dart';
 import 'package:j_app/data/cart_data.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'cart_page_screen.dart';
 
-class OrderHistoryPage extends StatelessWidget {
+class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
 
+  @override
+  State<OrderHistoryPage> createState() => _OrderHistoryPageState();
+}
+
+class _OrderHistoryPageState extends State<OrderHistoryPage> {
+
+  final DatabaseReference ordersRef = FirebaseDatabase.instance.ref("orders");
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,11 +34,37 @@ class OrderHistoryPage extends StatelessWidget {
         ),
       ),
 
-      body: ValueListenableBuilder(
-        valueListenable: orderBox.listenable(),
+      body: StreamBuilder<DatabaseEvent>(
+        stream: FirebaseAuth.instance.currentUser == null
+            ? const Stream.empty()
+            : ordersRef
+            .child(FirebaseAuth.instance.currentUser!.uid)
+            .onValue,
 
-        builder: (context, box, _) {
-          if (box.isEmpty) {
+        builder: (context, snapshot) {
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFC67C4E),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text(
+                "Something went wrong",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData ||
+              snapshot.data!.snapshot.value == null) {
             return const Center(
               child: Text(
                 "No orders yet",
@@ -43,28 +76,33 @@ class OrderHistoryPage extends StatelessWidget {
             );
           }
 
-          final orders = box.values.toList().reversed.toList();
+          final data = snapshot.data!.snapshot.value;
+
+          final Map<String, dynamic> orders =
+          Map<String, dynamic>.from(data as Map);
+
+          final orderList = orders.entries.toList().reversed.toList();
 
           return ListView.builder(
             padding: const EdgeInsets.all(15),
 
-            itemCount: orders.length,
+            itemCount: orderList.length,
 
             itemBuilder: (context, index) {
-              final order =
-              Map<String, dynamic>.from(orders[index]);
 
-              final items =
-              List<Map<String, dynamic>>.from(
+              final order =
+              Map<String, dynamic>.from(orderList[index].value);
+
+              final items = List<Map<String, dynamic>>.from(
                 (order["items"] as List).map(
                       (item) => Map<String, dynamic>.from(item),
                 ),
               );
 
               final dateTime =
-              DateTime.parse(order["dateTime"]);
+              DateTime.parse(order["orderDate"]);
 
-              final deliveredOn =
+              final orderDate =
                   "${dateTime.day}/${dateTime.month}/${dateTime.year}";
 
               return Card(
@@ -85,19 +123,22 @@ class OrderHistoryPage extends StatelessWidget {
                     children: [
 
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
 
                         children: [
 
-                          // DELIVERED ON
                           Expanded(
                             flex: 2,
+
                             child: Column(
                               crossAxisAlignment:
                               CrossAxisAlignment.start,
+
                               children: [
+
                                 const Text(
-                                  "Delivered on",
+                                  "Order Date",
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
@@ -107,7 +148,8 @@ class OrderHistoryPage extends StatelessWidget {
                                 const SizedBox(height: 6),
 
                                 Text(
-                                  deliveredOn,
+                                  orderDate,
+
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -119,13 +161,15 @@ class OrderHistoryPage extends StatelessWidget {
 
                           const SizedBox(width: 10),
 
-                          // TOTAL PRICE
                           Expanded(
                             flex: 2,
+
                             child: Column(
                               crossAxisAlignment:
                               CrossAxisAlignment.start,
+
                               children: [
+
                                 const Text(
                                   "Total Price",
                                   style: TextStyle(
@@ -137,9 +181,7 @@ class OrderHistoryPage extends StatelessWidget {
                                 const SizedBox(height: 6),
 
                                 Text(
-                                  "\$${(
-                                      order["total"] as num
-                                  ).toDouble().toStringAsFixed(2)}",
+                                  "\$${(order["totalPrice"] as num).toDouble().toStringAsFixed(2)}",
 
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -153,14 +195,15 @@ class OrderHistoryPage extends StatelessWidget {
 
                           const SizedBox(width: 10),
 
-                          // ALL ITEMS
                           Expanded(
                             flex: 3,
+
                             child: Column(
                               crossAxisAlignment:
                               CrossAxisAlignment.start,
 
                               children: [
+
                                 const Text(
                                   "All Items",
                                   style: TextStyle(
@@ -175,9 +218,11 @@ class OrderHistoryPage extends StatelessWidget {
                                       (item) {
                                     return Text(
                                       "${item["name"]} × ${item["quantity"]}",
+
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight:
+                                        FontWeight.w500,
                                       ),
                                     );
                                   },
@@ -188,53 +233,69 @@ class OrderHistoryPage extends StatelessWidget {
                         ],
                       ),
 
-                      // 👇 PUT REORDER BUTTON HERE
                       const SizedBox(height: 12),
 
                       SizedBox(
                         width: double.infinity,
 
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
 
                             for (final item in items) {
+
+                              final productId = item["id"];
 
                               final quantity =
                               (item["quantity"] as num).toInt();
 
                               for (int i = 0; i < quantity; i++) {
-                                addToCart(item);
+
+                                await addToCart(
+                                  item,
+                                  productId,
+                                );
                               }
                             }
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CartPage(),
-                              ),
-                            );
+
+                            if (!mounted) return;
 
                             Fluttertoast.showToast(
                               msg: "All Items Added to Cart",
                             );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CartPage(),
+                              ),
+                            );
                           },
+                          style:
+                          ElevatedButton.styleFrom(
+                            backgroundColor:
+                            const Color(0xFFC67C4E),
 
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFC67C4E),
-                            foregroundColor: Colors.white,
+                            foregroundColor:
+                            Colors.white,
 
-                            padding: const EdgeInsets.symmetric(
+                            padding:
+                            const EdgeInsets.symmetric(
                               vertical: 12,
                             ),
 
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            shape:
+                            RoundedRectangleBorder(
+                              borderRadius:
+                              BorderRadius.circular(10),
                             ),
                           ),
 
                           child: const Text(
                             "Reorder",
+
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                              FontWeight.bold,
                               fontSize: 15,
                             ),
                           ),
@@ -248,7 +309,6 @@ class OrderHistoryPage extends StatelessWidget {
           );
         },
       ),
-
       bottomNavigationBar: const BottomNavBar(
         selectedIndex: 2,
       ),

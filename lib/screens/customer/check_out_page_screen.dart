@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:j_app/data/cart_data.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:j_app/data/order_data.dart';
 import 'order_history_page.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 
 class CheckOutPage extends StatefulWidget {
@@ -14,6 +15,8 @@ class CheckOutPage extends StatefulWidget {
 }
 
 class _CheckOutPageState extends State<CheckOutPage> {
+
+  List<Map<String, dynamic>> items = [];bool loadingCart = true;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -27,6 +30,23 @@ class _CheckOutPageState extends State<CheckOutPage> {
   bool hidden = true;
 
   double deliveryFee = 2.00;
+
+  @override
+  void initState() {
+    super.initState();
+    loadCart();
+  }
+
+  Future<void> loadCart() async {
+    final cart = await getCartItems();
+
+    if (!mounted) return;
+
+    setState(() {
+      items = cart;
+      loadingCart = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -44,10 +64,9 @@ class _CheckOutPageState extends State<CheckOutPage> {
   double calculateSubtotal() {
     double subtotal = 0;
 
-    for (var item in cartItems) {
+    for (var item in items) {
       subtotal +=
-          (item["price"] as num).toDouble() *
-              (item["quantity"] as num).toInt();
+          (item["price"] as num).toDouble() * (item["quantity"] as num).toInt();
     }
 
     return subtotal;
@@ -57,143 +76,127 @@ class _CheckOutPageState extends State<CheckOutPage> {
     return calculateSubtotal() + deliveryFee;
   }
 
-  void placeOrder() {
-
+  Future<void> placeOrder() async {
     if (nameController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
         addressController.text.trim().isEmpty) {
-
       Fluttertoast.showToast(
         msg: "Fill all delivery fields",
       );
-
       return;
     }
 
     if (selectedPayment == "Card") {
-
       if (cardNumberController.text.trim().isEmpty ||
           cardHolderController.text.trim().isEmpty ||
           expiryController.text.trim().isEmpty ||
           cvvController.text.trim().isEmpty) {
-
         Fluttertoast.showToast(
           msg: "Fill all card details",
         );
-
         return;
       }
     }
 
-    final items = cartItems;
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      Fluttertoast.showToast(
+        msg: "Please login first",
+      );
+      return;
+    }
 
     final subtotal = calculateSubtotal();
     final total = calculateTotal();
 
-    saveOrder(
-      name: nameController.text.trim(),
-      phone: phoneController.text.trim(),
-      address: addressController.text.trim(),
-      paymentMethod: selectedPayment,
-      items: items,
-      subtotal: subtotal,
-      deliveryFee: deliveryFee,
-      total: total,
-    );
+    try {
+      final orderRef = FirebaseDatabase.instance
+          .ref("orders/${user.uid}")
+          .push();
 
-    cartBox.clear();
+      await orderRef.set({
+        "orderDate": DateTime.now().toIso8601String(),
+        "customer": {
+          "name": nameController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "address": addressController.text.trim(),
+        },
+        "paymentMethod": selectedPayment,
+        "subtotal": subtotal,
+        "deliveryFee": deliveryFee,
+        "totalPrice": total,
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
+        "items": items.map((item) {
+          return {
+            "id": item["id"],
+            "name": item["name"],
+            "description": item["description"],
+            "price": item["price"],
+            "image": item["image"],
+            "quantity": item["quantity"],
+          };
+        }).toList(),
+      });
 
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Order Placed",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+      await clearCart();
 
-          content: const Text(
-            "Your order has been placed successfully.",
+      if (!mounted) return;
 
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OrderHistoryPage(),
-                  ),
-                );
-              },
-
-              child: const Text(
-                "OK",
-                style: TextStyle(
-                  color: Color(0xFFC67C4E),
-                ),
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text(
+              "Order Placed",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        );
-      },
-    );
 
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Order Placed",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+            content: Text(
+              selectedPayment == "Card"
+                  ? "Your payment was successful and your order has been placed."
+                  : "Your order has been placed successfully.",
             ),
-          ),
 
-          content: Text(
-            selectedPayment == "Card"
-                ? "Your payment was successful and your order has been placed."
-                : "Your order has been placed successfully.",
-          ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
 
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OrderHistoryPage(),
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                      const OrderHistoryPage(),
+                    ),
+                  );
+                },
+
+                child: const Text(
+                  "OK",
+                  style: TextStyle(
+                    color: Color(0xFFC67C4E),
                   ),
-                );              },
-
-              child: const Text(
-                "OK",
-                style: TextStyle(
-                  color: Color(0xFFC67C4E),
                 ),
               ),
-            ),
-          ],
-        );
-      },
-    );
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "Failed to place order",
+      );
+
+      print("Order error: $e");
+    }
   }
-
   @override
   Widget build(BuildContext context) {
 
-    final items = cartItems;
     final subtotal = calculateSubtotal();
     final total = calculateTotal();
 
@@ -206,7 +209,13 @@ class _CheckOutPageState extends State<CheckOutPage> {
         ,        titleTextStyle: TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 30,),
       ),
 
-      body: items.isEmpty
+      body: loadingCart
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFFC67C4E),
+        ),
+      )
+          : items.isEmpty
           ? const Center(
         child: Text(
           "Your cart is empty",
@@ -604,9 +613,11 @@ class _CheckOutPageState extends State<CheckOutPage> {
                         ),
 
                         IconButton(
-                          onPressed: () {
-                            removeFromCart(item);
-                          },
+                          onPressed: () async {
+                          await removeFromCart(item["productId"]);
+
+                          await loadCart();
+                        },
 
                           icon: const Icon(
                             Icons.delete_outline,

@@ -1,14 +1,15 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-final Box orderBox = Hive.box('orderBox');
+final DatabaseReference ordersRef =
+FirebaseDatabase.instance.ref("orders");
 
-void deleteOrder(int index) {
-  final key = orderBox.keyAt(index);
-  orderBox.delete(key);
+String get currentUserId {
+  return FirebaseAuth.instance.currentUser!.uid;
 }
 
 
-void saveOrder({
+Future<void> saveOrder({
   required String name,
   required String phone,
   required String address,
@@ -17,30 +18,44 @@ void saveOrder({
   required double subtotal,
   required double deliveryFee,
   required double total,
-}) {
-  final order = {
-    "orderId": orderBox.length + 1,
-    "name": name,
-    "phone": phone,
-    "address": address,
-    "paymentMethod": paymentMethod,
-    "dateTime": DateTime.now().toIso8601String(),
+}) async {
 
-    "items": items.map((item) {
-      return {
-        "name": item["name"],
-        "price": item["price"],
-        "quantity": item["quantity"],
-        "image": item["image"],
-      };
-    }).toList(),
+  final orderRef = ordersRef.push();
+
+  final order = {
+    "userId": currentUserId,
+
+    "customer": {
+      "name": name,
+      "phone": phone,
+      "address": address,
+    },
+
+    "paymentMethod": paymentMethod,
+
+    "orderDate": ServerValue.timestamp,
+
+    "items": {
+      for (final item in items)
+        item["id"].toString(): {
+          "name": item["name"],
+          "price": item["price"],
+          "image": item["image"],
+          "quantity": item["quantity"],
+        }
+    },
 
     "subtotal": subtotal,
     "deliveryFee": deliveryFee,
-    "total": total,
-    "status": "Placed",
+    "totalPrice": total,
+
+    "status": "Pending",
   };
 
-  orderBox.add(order);
+  await orderRef.set(order);
 }
 
+
+Future<void> deleteOrder(String orderId) async {
+  await ordersRef.child(orderId).remove();
+}

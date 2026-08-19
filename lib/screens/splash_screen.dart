@@ -6,8 +6,8 @@ import 'package:firebase_database/firebase_database.dart';
 
 import 'first_Screen.dart';
 import 'saved_screen.dart';
-import 'home_page_screen.dart';
-import 'admin_users_page.dart';
+import 'customer/home_page_screen.dart';
+import 'admin/users_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-          const AdminUsersPage(),
+          const UsersPage(),
         ),
       );
 

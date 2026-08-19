@@ -1,21 +1,34 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-final Box wishlistBox = Hive.box('wishlistBox');
+final DatabaseReference database = FirebaseDatabase.instance.ref();
 
-bool isWishlisted(String coffeeName) {
-  for (var item in wishlistBox.values) {
-    final coffee = Map<String, dynamic>.from(item);
+Future<bool> isWishlisted(String productId) async {
+  final user = FirebaseAuth.instance.currentUser;
 
-    if (coffee["name"] == coffeeName) {
-      return true;
-    }
-  }
+  if (user == null) return false;
 
-  return false;
+  final snapshot = await database
+      .child("users")
+      .child(user.uid)
+      .child("wishlist")
+      .child(productId)
+      .get();
+
+  return snapshot.exists;
 }
 
-void addToWishlist(Map<String, dynamic> coffee) {
-  wishlistBox.add({
+Future<void> addToWishlist(Map<String, dynamic> coffee, String productId,) async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  await database
+      .child("users")
+      .child(user.uid)
+      .child("wishlist")
+      .child(productId)
+      .set({
     "name": coffee["name"],
     "description": coffee["description"],
     "price": coffee["price"],
@@ -24,22 +37,45 @@ void addToWishlist(Map<String, dynamic> coffee) {
   });
 }
 
-void removeFromWishlist(String coffeeName) {
-  for (var key in wishlistBox.keys) {
-    final item = Map<String, dynamic>.from(
-      wishlistBox.get(key),
+Future<void> removeFromWishlist(String productId) async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  await database
+      .child("users")
+      .child(user.uid)
+      .child("wishlist")
+      .child(productId)
+      .remove();
+}
+
+Future<List<Map<String, dynamic>>> getWishlistItems() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return [];
+
+  final snapshot = await database
+      .child("users")
+      .child(user.uid)
+      .child("wishlist")
+      .get();
+
+  if (!snapshot.exists) {
+    return [];
+  }
+
+  final List<Map<String, dynamic>> items = [];
+
+  for (final child in snapshot.children) {
+    final data = Map<String, dynamic>.from(
+      child.value as Map,
     );
 
-    if (item["name"] == coffeeName) {
-      wishlistBox.delete(key);
-      break;
-    }
+    data["id"] = child.key;
+
+    items.add(data);
   }
-}
 
-List<Map<String, dynamic>> get wishlistItems {
-  return wishlistBox.values
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList();
+  return items;
 }
-

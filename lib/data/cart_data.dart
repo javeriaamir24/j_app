@@ -1,88 +1,160 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-final Box cartBox = Hive.box('cartBox');
+final DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
 
-List<Map<String, dynamic>> get cartItems {
-  return cartBox.values
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList();
+String get userId {
+  return FirebaseAuth.instance.currentUser!.uid;
 }
 
-int getQuantity(String coffeeName){
-  for(var item in cartBox.values){
-    final cartItem = Map<String,dynamic>.from(item);
-  if (cartItem["name"] == coffeeName){
-  return cartItem["quantity"] ?? 0;
-  }
-  }
-  return 0;
+Future<List<Map<String, dynamic>>> getCartItems() async {
+
+  final snapshot = await usersRef
+      .child(userId)
+      .child("cart")
+      .get();
+
+  if (!snapshot.exists) {
+    return [];
   }
 
-void addToCart(Map<String, dynamic> coffee) {
-  int? existingKey;
-  for (var key in cartBox.keys) {
-    final item = Map<String, dynamic>.from(cartBox.get(key));
-    if (item["name"] == coffee["name"]) {
-      existingKey = key;
-      break;
-    }
+  final data =
+  Map<String, dynamic>.from(snapshot.value as Map);
+
+  return data.entries.map((entry) {
+
+    final item =
+    Map<String, dynamic>.from(entry.value);
+
+    item["productId"] = entry.key;
+
+    return item;
+
+  }).toList();
+}
+
+Future<void> clearCart() async {
+
+  await usersRef
+      .child(userId)
+      .child("cart")
+      .remove();
+}
+
+Future<int> getQuantity(String coffeeId) async {
+
+  final snapshot = await usersRef
+      .child(userId)
+      .child("cart")
+      .child(coffeeId)
+      .child("quantity")
+      .get();
+
+  if (!snapshot.exists) {
+    return 0;
   }
-  void removeFromCart(Map<String, dynamic> item) {
-    cartItems.removeWhere(
-          (cartItem) => cartItem["name"] == item["name"],
+
+  return (snapshot.value as num).toInt();
+}
+
+Future<void> addToCart(Map<String, dynamic> coffee, String coffeeId,) async {
+
+  final itemRef = usersRef
+      .child(userId)
+      .child("cart")
+      .child(coffeeId);
+
+  final snapshot = await itemRef.get();
+
+  if (snapshot.exists) {
+
+    final data =
+    Map<String, dynamic>.from(
+      snapshot.value as Map,
     );
 
-    cartBox.put("cartItems", cartItems);
-  }
+    final currentQuantity =
+    (data["quantity"] as num).toInt();
 
-  if (existingKey != null) {
-    final item = Map<String, dynamic>.from(
-      cartBox.get(existingKey),
-    );
-    item["quantity"]++;
-    cartBox.put(existingKey, item);
+    await itemRef.update({
+      "quantity": currentQuantity + 1,
+    });
+
   } else {
-    cartBox.add({
+
+    await itemRef.set({
+
+      "id": coffeeId,
+
       "name": coffee["name"],
       "description": coffee["description"],
-      "price": coffee["price"],
       "image": coffee["image"],
+      "price": coffee["price"],
+
       "quantity": 1,
     });
   }
 }
 
-void increaseQuantity(int index){
-  final key = cartBox.keyAt(index);
-  final item = Map<String, dynamic> .from(cartBox.get(key),);
-  item["quantity"]++;
-  cartBox.put(key,item);
+Future<void> increaseQuantity(String coffeeId,) async {
+
+  final quantityRef = usersRef
+      .child(userId)
+      .child("cart")
+      .child(coffeeId)
+      .child("quantity");
+
+  final snapshot =
+  await quantityRef.get();
+
+  if (!snapshot.exists) {
+    return;
+  }
+
+  final quantity =
+  (snapshot.value as num).toInt();
+
+  await quantityRef.set(
+    quantity + 1,
+  );
 }
 
-void decreaseQuantity(int index) {
-  final key = cartBox.keyAt(index);
-  final item = Map<String, dynamic>.from(cartBox.get(key),);
-  if (item["quantity"] > 1) {
-    item["quantity"]--;
-    cartBox.put(key, item);
+Future<void> decreaseQuantity(String coffeeId,) async {
+
+  final itemRef = usersRef
+      .child(userId)
+      .child("cart")
+      .child(coffeeId);
+
+  final quantityRef =
+  itemRef.child("quantity");
+
+  final snapshot =
+  await quantityRef.get();
+
+  if (!snapshot.exists) {
+    return;
+  }
+
+  final quantity =
+  (snapshot.value as num).toInt();
+
+  if (quantity > 1) {
+
+    await quantityRef.set(
+      quantity - 1,
+    );
+
   } else {
-    cartBox.delete(key);
+
+    await itemRef.remove();
   }
 }
 
-void removeFromCart(Map<String, dynamic> item) {
-  dynamic keyToDelete;
-
-  for (var key in cartBox.keys) {
-    final cartItem = Map<String, dynamic>.from(cartBox.get(key));
-
-    if (cartItem["name"] == item["name"]) {
-      keyToDelete = key;
-      break;
-    }
-  }
-
-  if (keyToDelete != null) {
-    cartBox.delete(keyToDelete);
-  }
+Future<void> removeFromCart(String coffeeId,) async {
+  await usersRef
+      .child(userId)
+      .child("cart")
+      .child(coffeeId)
+      .remove();
 }

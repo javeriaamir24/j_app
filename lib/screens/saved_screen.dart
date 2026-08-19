@@ -4,9 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-import 'home_page_screen.dart';
+import 'customer/home_page_screen.dart';
 import 'login_page_screen.dart';
-import 'admin_users_page.dart';
+import 'admin/users_page.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
@@ -140,28 +140,19 @@ class _SavedScreenState extends State<SavedScreen> {
         msg: "Welcome Back!",
       );
 
-      // =====================================================
-      // ADMIN
-      // =====================================================
-
       if (role == "admin") {
 
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) =>
-            const AdminUsersPage(),
+            const UsersPage(),
           ),
               (route) => false,
         );
 
         return;
       }
-
-      // =====================================================
-      // CUSTOMER
-      // =====================================================
-
       if (role == "customer") {
 
         Navigator.pushAndRemoveUntil(
