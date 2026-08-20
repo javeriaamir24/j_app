@@ -126,6 +126,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
         "subtotal": subtotal,
         "deliveryFee": deliveryFee,
         "totalPrice": total,
+        "status": "pending",
 
         "items": items.map((item) {
           return {

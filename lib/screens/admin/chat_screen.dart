@@ -53,7 +53,6 @@ class _AdminChatState extends State<AdminChat> {
       }
     }
   }
-
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -63,7 +62,6 @@ class _AdminChatState extends State<AdminChat> {
       }
     });
   }
-
   Future<void> sendMessage() async {
     final message = messageController.text.trim();
 
@@ -96,7 +94,6 @@ class _AdminChatState extends State<AdminChat> {
       message: message,
     );
   }
-
   String formatTime(dynamic timestamp) {
 
     if (timestamp == null) {
@@ -112,7 +109,6 @@ class _AdminChatState extends State<AdminChat> {
     final period = dateTime.hour >= 12 ? "PM" : "AM";
     return "$hour:$minute $period";
   }
-
   String formatDate(dynamic timestamp) {
 
     if (timestamp == null) {
@@ -151,7 +147,6 @@ class _AdminChatState extends State<AdminChat> {
 
     return "$weekday, ${dateTime.day} $month ${dateTime.year}";
   }
-
   bool isNewDay(List<MapEntry> messages, int index) {
 
     if (index == 0) {
@@ -178,7 +173,6 @@ class _AdminChatState extends State<AdminChat> {
 
     return currentDate.year != previousDate.year || currentDate.month != previousDate.month || currentDate.day != previousDate.day;
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
