@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:j_app/data/cart_data.dart';
-import 'package:j_app/data/wishlist_data.dart';
 import 'package:j_app/screens/customer/coffee_detail_screen.dart';
 import 'package:j_app/widgets/wishlist_button.dart';
 

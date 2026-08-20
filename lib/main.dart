@@ -15,7 +15,7 @@ import 'package:j_app/screens/customer/cart_page_screen.dart';
 import 'package:j_app/screens/admin/chat_screen.dart';
 import 'package:j_app/screens/admin/users_page.dart';
 import 'package:j_app/screens/admin/order_management.dart';
-import 'package:j_app/screens/admin/products.dart';
+import 'package:j_app/screens/admin/product_management/product_management.dart';
 
 import 'package:j_app/services/notification_service.dart';
 

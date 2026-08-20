@@ -13,6 +13,8 @@ import 'privacy_policy_page.dart';
 import 'terms_conditions_page.dart';
 import 'package:j_app/services/coffee_service.dart';
 import 'package:j_app/widgets/coffee_card.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 
 
 class HomePage extends StatefulWidget {
@@ -28,8 +30,7 @@ class _HomePageState extends  State<HomePage>{
   FirebaseAuth auth = FirebaseAuth.instance;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  final categories = ["All Coffee", "Latte", "Matcha", "Americano", "Espresso",];
-
+  List<String> categories = ["All Coffee"];
   List<String> sliderImages = [
     "assets/images/coffee_background.webp",
     "assets/images/coffee_icons.jpg",
@@ -44,6 +45,39 @@ class _HomePageState extends  State<HomePage>{
     setState(() {
       coffees = data;
       isLoading = false;
+    });
+  }
+
+  Future<void> loadCategories() async {
+    final snapshot =
+    await FirebaseDatabase.instance.ref('coffees').get();
+
+    if (!snapshot.exists || snapshot.value == null) {
+      return;
+    }
+
+    final data = Map<dynamic, dynamic>.from(
+      snapshot.value as Map,
+    );
+
+    final categorySet = <String>{};
+
+    for (final coffee in data.values) {
+      final coffeeData = Map<dynamic, dynamic>.from(coffee);
+
+      final category =
+      coffeeData['category']?.toString().trim();
+
+      if (category != null && category.isNotEmpty) {
+        categorySet.add(category);
+      }
+    }
+
+    setState(() {
+      categories = [
+        "All Coffee",
+        ...categorySet,
+      ];
     });
   }
 
@@ -284,6 +318,8 @@ class _HomePageState extends  State<HomePage>{
   void initState() {
     super.initState();
     loadCoffees();
+    loadCategories();
+
 
     sliderTimer = Timer.periodic(
       const Duration(seconds: 2),
