@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'firebase_options.dart';
 
 import 'package:j_app/screens/splash_screen.dart';
-import 'package:j_app/screens/profile_page_screen.dart';
+import 'package:j_app/screens/customer/profile_page_screen.dart';
 
 import 'package:j_app/screens/customer/customer_chat.dart';
 import 'package:j_app/screens/customer/home_page_screen.dart';
@@ -15,12 +17,24 @@ import 'package:j_app/screens/admin/users_page.dart';
 import 'package:j_app/screens/admin/order_management.dart';
 import 'package:j_app/screens/admin/products.dart';
 
+import 'package:j_app/services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await NotificationService.initialize();
+
+  FirebaseAuth.instance.authStateChanges().listen((user) {
+    if (user != null) {
+      OneSignal.login(user.uid);
+    } else {
+      OneSignal.logout();
+    }
+  });
 
   runApp(
     MaterialApp(
@@ -29,7 +43,6 @@ void main() async {
       home: const SplashScreen(),
 
       routes: {
-
         '/home': (context) => const HomePage(),
         '/cart': (context) => const CartPage(),
         '/order_history': (context) => const OrderHistoryPage(),
@@ -37,7 +50,7 @@ void main() async {
         '/profile': (context) => const ProfilePage(),
 
         '/users': (context) => const UsersPage(),
-        '/products': (context) =>  ProductsPage(),
+        '/products': (context) => ProductsPage(),
         '/order_manage': (context) => OrderManagement(),
       },
     ),

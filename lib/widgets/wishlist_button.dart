@@ -11,8 +11,7 @@ class WishlistButton extends StatefulWidget {
   });
 
   @override
-  State<WishlistButton> createState() =>
-      _WishlistButtonState();
+  State<WishlistButton> createState() => _WishlistButtonState();
 }
 
 class _WishlistButtonState extends State<WishlistButton> {

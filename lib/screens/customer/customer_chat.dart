@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:j_app/services/notification_sender.dart';
 
 class CustomerChat extends StatefulWidget {
   const CustomerChat({super.key});
@@ -113,8 +114,8 @@ class _CustomerChatState extends State<CustomerChat> {
   }
 
   Future<void> sendMessage() async {
-
     final message = messageController.text.trim();
+
     if (message.isEmpty) {
       return;
     }
@@ -130,6 +131,7 @@ class _CustomerChatState extends State<CustomerChat> {
     }
 
     final messageRef = messagesRef.push();
+
     await messageRef.set({
       "senderId": customer.uid,
       "senderType": "customer",
@@ -140,6 +142,12 @@ class _CustomerChatState extends State<CustomerChat> {
     });
 
     messageController.clear();
+
+    await NotificationSender.sendNotification(
+      receiverId: adminId!,
+      senderName: customer.displayName ?? "Customer",
+      message: message,
+    );
   }
 
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:j_app/screens/customer/cart_page_screen.dart';
 import 'package:j_app/screens/first_Screen.dart';
-import 'package:j_app/screens/profile_page_screen.dart';
+import 'package:j_app/screens/customer/profile_page_screen.dart';
 import 'package:j_app/screens/customer/wish_list_page.dart';
 import 'dart:async';
 import '../saved_screen.dart';

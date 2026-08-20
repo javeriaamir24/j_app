@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:j_app/services/notification_sender.dart';
 
 class AdminChat extends StatefulWidget {
 
@@ -34,6 +35,7 @@ class _AdminChatState extends State<AdminChat> {
     _scrollController.dispose();
     super.dispose();
   }
+
   void markMessagesAsRead(List<MapEntry> messages) {
 
     for (final entry in messages) {
@@ -51,6 +53,7 @@ class _AdminChatState extends State<AdminChat> {
       }
     }
   }
+
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -60,8 +63,8 @@ class _AdminChatState extends State<AdminChat> {
       }
     });
   }
-  Future<void> sendMessage() async {
 
+  Future<void> sendMessage() async {
     final message = messageController.text.trim();
 
     if (message.isEmpty) {
@@ -79,13 +82,21 @@ class _AdminChatState extends State<AdminChat> {
     await messageRef.set({
       "senderId": admin.uid,
       "senderType": "admin",
+      "receiverId": widget.customerId,
       "message": message,
       "timestamp": ServerValue.timestamp,
       "isRead": false,
     });
 
     messageController.clear();
+
+    await NotificationSender.sendNotification(
+      receiverId: widget.customerId,
+      senderName: "Customer Support",
+      message: message,
+    );
   }
+
   String formatTime(dynamic timestamp) {
 
     if (timestamp == null) {
@@ -101,6 +112,7 @@ class _AdminChatState extends State<AdminChat> {
     final period = dateTime.hour >= 12 ? "PM" : "AM";
     return "$hour:$minute $period";
   }
+
   String formatDate(dynamic timestamp) {
 
     if (timestamp == null) {
@@ -139,6 +151,7 @@ class _AdminChatState extends State<AdminChat> {
 
     return "$weekday, ${dateTime.day} $month ${dateTime.year}";
   }
+
   bool isNewDay(List<MapEntry> messages, int index) {
 
     if (index == 0) {

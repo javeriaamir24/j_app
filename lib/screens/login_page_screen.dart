@@ -9,6 +9,8 @@ import 'admin/users_page.dart';
 import 'first_Screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:j_app/services/notification_service.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,7 +85,7 @@ class _LoginPageState extends State<LoginPage>
 
 
                   TextField(
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white),
                     cursorColor: Color(0xFFC67C4E),
 
                     controller: emailController,
@@ -224,6 +226,8 @@ class _LoginPageState extends State<LoginPage>
         email: typedEmail,
         password: typedPassword,
       );
+
+
       User? user = userCredential.user;
       if (user == null) {
         throw Exception("User not found");
@@ -277,6 +281,8 @@ class _LoginPageState extends State<LoginPage>
       print("LOGIN EMAIL: ${user.email}");
       print("LOGIN UID: ${user.uid}");
       print("USER ROLE: $role");
+
+      await OneSignal.login(user.uid);
 
       Fluttertoast.showToast(
         msg: "Logged In Successfully",
