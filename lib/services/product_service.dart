@@ -24,6 +24,10 @@ class ProductService {
     }).toList();
   }
 
+  // =========================
+  // ADD PRODUCT
+  // =========================
+
   Future<void> addProduct({
     required String name,
     required double price,
@@ -31,6 +35,7 @@ class ProductService {
     required String description,
     required String detailedDescription,
     required bool popular,
+    String? imageUrl,
   }) async {
     final newCoffee = _coffeesRef.push();
 
@@ -41,12 +46,16 @@ class ProductService {
       'description': description,
       'detailedDescription': detailedDescription,
 
-      // Default image for now
-      'image': 'assets/images/coffee_themed.avif',
+      // Cloudinary image URL
+      'image': imageUrl,
 
       'popular': popular,
     });
   }
+
+  // =========================
+  // UPDATE PRODUCT
+  // =========================
 
   Future<void> updateProduct({
     required String id,
@@ -56,16 +65,28 @@ class ProductService {
     required String description,
     required String detailedDescription,
     required bool popular,
+    String? imageUrl,
   }) async {
-    await _coffeesRef.child(id).update({
+    final Map<String, dynamic> updates = {
       'name': name,
       'price': price,
       'category': category,
       'description': description,
       'detailedDescription': detailedDescription,
       'popular': popular,
-    });
+    };
+
+    // Only change image if a new image was selected
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      updates['image'] = imageUrl;
+    }
+
+    await _coffeesRef.child(id).update(updates);
   }
+
+  // =========================
+  // DELETE PRODUCT
+  // =========================
 
   Future<void> deleteProduct(String id) async {
     await _coffeesRef.child(id).remove();

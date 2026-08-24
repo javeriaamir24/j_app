@@ -99,7 +99,30 @@ class CoffeeCard extends StatelessWidget {
               Stack(
                 children: [
 
-                  Image.asset(
+                  coffee["image"].toString().startsWith("http")
+                      ? Image.network(
+                    coffee["image"],
+
+                    height: imageHeight,
+
+                    width: double.infinity,
+
+                    fit: BoxFit.cover,
+
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: imageHeight,
+                        width: double.infinity,
+                        color: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  )
+                      : Image.asset(
                     coffee["image"],
 
                     height: imageHeight,
@@ -108,7 +131,6 @@ class CoffeeCard extends StatelessWidget {
 
                     fit: BoxFit.cover,
                   ),
-
                   Positioned(
                     top: 8,
                     right: 8,

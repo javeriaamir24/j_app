@@ -115,8 +115,36 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
           : Column(
         children: [
 
-          Image.asset(
+          widget.coffee["image"]
+              .toString()
+              .startsWith("http")
+              ? Image.network(
             widget.coffee["image"],
+            width: double.infinity,
+            height: 250,
+            fit: BoxFit.cover,
+            errorBuilder: (
+                context,
+                error,
+                stackTrace,
+                ) {
+              return Container(
+                width: double.infinity,
+                height: 250,
+                color: Colors.grey.shade200,
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+              );
+            },
+          )
+              : Image.asset(
+            widget.coffee["image"],
+            width: double.infinity,
+            height: 250,
+            fit: BoxFit.cover,
           ),
 
           Text(
