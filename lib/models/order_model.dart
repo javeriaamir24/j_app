@@ -28,17 +28,34 @@ class OrderModel {
       String customerId,
       Map<dynamic, dynamic> data,
       ) {
+    final customerData = data['customer'];
+
+    String customerName = '';
+
+    if (customerData is Map) {
+      customerName =
+          customerData['name']?.toString() ?? '';
+    } else {
+      customerName =
+          customerData?.toString() ?? '';
+    }
+
     return OrderModel(
       id: id,
       customerId: customerId,
-      customer: data['customer'] ?? '',
-      orderDate: data['orderDate'] ?? '',
-      paymentMethod: data['paymentMethod'] ?? '',
-      subtotal: (data['subtotal'] ?? 0).toDouble(),
-      deliveryFee: (data['deliveryFee'] ?? 0).toDouble(),
-      totalPrice: (data['totalPrice'] ?? 0).toDouble(),
+      customer: customerName,
+      orderDate: data['orderDate']?.toString() ?? '',
+      paymentMethod:
+      data['paymentMethod']?.toString() ?? '',
+      subtotal:
+      (data['subtotal'] ?? 0).toDouble(),
+      deliveryFee:
+      (data['deliveryFee'] ?? 0).toDouble(),
+      totalPrice:
+      (data['totalPrice'] ?? 0).toDouble(),
       items: data['items'],
-      status: data['status'] ?? 'Pending',
+      status:
+      data['status']?.toString() ?? 'Pending',
     );
   }
 }

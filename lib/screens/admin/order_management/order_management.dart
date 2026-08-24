@@ -9,8 +9,7 @@ class OrderManagement extends StatefulWidget {
   const OrderManagement({super.key});
 
   @override
-  State<OrderManagement> createState() =>
-      _OrderManagementState();
+  State<OrderManagement> createState() => _OrderManagementState();
 }
 
 class _OrderManagementState
@@ -75,6 +74,7 @@ class _OrderManagementState
           if (snapshot.hasError) {
 
             return const Center(
+
               child: Text(
                 'Something went wrong',
                 style: TextStyle(
@@ -134,7 +134,6 @@ class _OrderManagementState
 
                     children: [
 
-                      // Order ID + Edit button
                       Row(
                         children: [
 

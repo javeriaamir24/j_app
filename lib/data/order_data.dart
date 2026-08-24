@@ -49,7 +49,7 @@ Future<void> saveOrder({
     "deliveryFee": deliveryFee,
     "totalPrice": total,
 
-    "status": "Pending",
+    "status": "pending",
   };
 
   await orderRef.set(order);
@@ -58,4 +58,16 @@ Future<void> saveOrder({
 
 Future<void> deleteOrder(String orderId) async {
   await ordersRef.child(orderId).remove();
+}
+
+
+Future<String> getStatus(String customerId, String orderId) async {
+  final snapshot = await FirebaseDatabase.instance
+      .ref('orders')
+      .child(customerId)
+      .child(orderId)
+      .child('status')
+      .get();
+
+  return snapshot.value?.toString() ?? 'pending';
 }

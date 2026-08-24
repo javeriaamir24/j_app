@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:j_app/data/order_data.dart';
 import 'package:j_app/widgets/customers_bottom_nav_bar.dart';
 import 'package:j_app/data/cart_data.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -16,6 +17,52 @@ class OrderHistoryPage extends StatefulWidget {
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
   final DatabaseReference ordersRef = FirebaseDatabase.instance.ref("orders");
+  String _formatStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pending';
+
+      case 'preparing':
+        return 'Preparing';
+
+      case 'ready':
+        return 'Ready';
+
+      case 'out_for_delivery':
+        return 'Out for Delivery';
+
+      case 'delivered':
+        return 'Delivered';
+
+      case 'cancelled':
+        return 'Cancelled';
+
+      default:
+        return status;
+    }
+  }
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return Colors.green;
+
+      case 'cancelled':
+        return Colors.red;
+
+      case 'ready':
+        return Colors.blue;
+
+      case 'out_for_delivery':
+        return Colors.orange;
+
+      case 'preparing':
+        return Colors.deepOrange;
+
+      case 'pending':
+      default:
+        return Colors.grey;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,20 +170,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     children: [
 
                       Row(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
                         children: [
 
+
+
                           Expanded(
                             flex: 2,
-
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
                                 const Text(
                                   "Order Date",
                                   style: TextStyle(
@@ -149,7 +193,6 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
                                 Text(
                                   orderDate,
-
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -161,15 +204,13 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
                           const SizedBox(width: 10),
 
+
+
                           Expanded(
                             flex: 2,
-
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
                                 const Text(
                                   "Total Price",
                                   style: TextStyle(
@@ -182,7 +223,6 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
                                 Text(
                                   "\$${(order["totalPrice"] as num).toDouble().toStringAsFixed(2)}",
-
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -197,13 +237,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
                           Expanded(
                             flex: 3,
-
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
                                 const Text(
                                   "All Items",
                                   style: TextStyle(
@@ -218,11 +254,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                                       (item) {
                                     return Text(
                                       "${item["name"]} × ${item["quantity"]}",
-
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        fontWeight:
-                                        FontWeight.w500,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     );
                                   },
@@ -230,9 +264,41 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                               ],
                             ),
                           ),
+
+
                         ],
                       ),
 
+                      const SizedBox(height: 12),
+Row(
+  children: [
+          const Text(
+            "Status: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+            ),
+          ),
+
+    const SizedBox(width: 10),
+
+          Text(
+            _formatStatus(
+              order["status"]?.toString() ?? "pending",
+            ),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: _statusColor(
+                order["status"]?.toString() ?? "pending",
+              ),
+            ),
+          ),
+
+
+
+  ],
+),
                       const SizedBox(height: 12),
 
                       SizedBox(
