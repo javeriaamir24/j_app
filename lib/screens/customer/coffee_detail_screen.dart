@@ -22,6 +22,8 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
   int quantity = 0;
   bool loading = true;
 
+  int wishlistRefresh = 0;
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +94,11 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
 
           WishlistButton(
             coffee: widget.coffee,
+            refresh: wishlistRefresh,
+
+            onChanged: () {
+              Navigator.pop(context, true);
+            },
           ),
 
         ],

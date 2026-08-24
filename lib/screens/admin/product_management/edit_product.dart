@@ -12,15 +12,13 @@ class EditProductPage extends StatefulWidget {
   });
 
   @override
-  State<EditProductPage> createState() =>
-      _EditProductPageState();
+  State<EditProductPage> createState() => _EditProductPageState();
 }
 
 class _EditProductPageState
     extends State<EditProductPage> {
 
-  final ProductService _productService =
-  ProductService();
+  final ProductService _productService = ProductService();
 
   late TextEditingController _nameController;
   late TextEditingController _priceController;
@@ -36,28 +34,15 @@ class _EditProductPageState
   void initState() {
     super.initState();
 
-    _nameController = TextEditingController(
-      text: widget.product.name,
-    );
+    _nameController = TextEditingController(text: widget.product.name,);
 
-    _priceController = TextEditingController(
-      text: widget.product.price.toString(),
-    );
+    _priceController = TextEditingController(text: widget.product.price.toString(),);
 
-    _descriptionController =
-        TextEditingController(
-          text: widget.product.description,
-        );
+    _descriptionController = TextEditingController(text: widget.product.description,);
 
-    _detailedDescriptionController =
-        TextEditingController(
-          text: widget.product.detailedDescription,
-        );
+    _detailedDescriptionController = TextEditingController(text: widget.product.detailedDescription,     );
 
-    _categoryController =
-        TextEditingController(
-          text: widget.product.category,
-        );
+    _categoryController = TextEditingController(text: widget.product.category,);
 
     _popular = widget.product.popular;
   }
@@ -65,23 +50,15 @@ class _EditProductPageState
   Future<void> _updateProduct() async {
     final name = _nameController.text.trim();
 
-    final priceText =
-    _priceController.text.trim();
+    final priceText = _priceController.text.trim();
 
-    final description =
-    _descriptionController.text.trim();
+    final description = _descriptionController.text.trim();
 
-    final detailedDescription =
-    _detailedDescriptionController.text.trim();
+    final detailedDescription = _detailedDescriptionController.text.trim();
 
-    final category =
-    _categoryController.text.trim();
+    final category = _categoryController.text.trim();
 
-    if (name.isEmpty ||
-        priceText.isEmpty ||
-        description.isEmpty ||
-        detailedDescription.isEmpty ||
-        category.isEmpty) {
+    if (name.isEmpty || priceText.isEmpty || description.isEmpty || detailedDescription.isEmpty || category.isEmpty) {
       Fluttertoast.showToast(
         msg: 'Please fill all fields',
         toastLength: Toast.LENGTH_SHORT,

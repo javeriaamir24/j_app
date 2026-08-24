@@ -4,14 +4,19 @@ import 'package:j_app/data/wishlist_data.dart';
 
 class WishlistButton extends StatefulWidget {
   final Map<String, dynamic> coffee;
+  final int refresh;
+  final VoidCallback? onChanged;
 
   const WishlistButton({
     super.key,
     required this.coffee,
+    required this.refresh,
+    this.onChanged,
   });
 
   @override
-  State<WishlistButton> createState() => _WishlistButtonState();
+  State<WishlistButton> createState() =>
+      _WishlistButtonState();
 }
 
 class _WishlistButtonState extends State<WishlistButton> {
@@ -23,6 +28,16 @@ class _WishlistButtonState extends State<WishlistButton> {
   void initState() {
     super.initState();
     checkWishlist();
+  }
+
+  @override
+  void didUpdateWidget(
+      covariant WishlistButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.refresh != widget.refresh) {
+      checkWishlist();
+    }
   }
 
   Future<void> checkWishlist() async {
@@ -58,6 +73,9 @@ class _WishlistButtonState extends State<WishlistButton> {
         msg: "Removed from Wishlist",
       );
 
+      // Tell parent that wishlist changed
+      widget.onChanged?.call();
+
     } else {
 
       await addToWishlist(
@@ -74,6 +92,9 @@ class _WishlistButtonState extends State<WishlistButton> {
       Fluttertoast.showToast(
         msg: "Added to Wishlist",
       );
+
+      // Tell parent that wishlist changed
+      widget.onChanged?.call();
     }
   }
 
@@ -100,7 +121,6 @@ class _WishlistButtonState extends State<WishlistButton> {
       )
 
           : IconButton(
-
         onPressed: toggleWishlist,
 
         icon: Icon(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'firebase_options.dart';
 
 import 'package:j_app/screens/splash_screen.dart';
@@ -28,13 +27,7 @@ void main() async {
 
   await NotificationService.initialize();
 
-  FirebaseAuth.instance.authStateChanges().listen((user) {
-    if (user != null) {
-      OneSignal.login(user.uid);
-    } else {
-      OneSignal.logout();
-    }
-  });
+
 
   runApp(
     MaterialApp(

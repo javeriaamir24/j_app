@@ -15,22 +15,28 @@ import 'package:j_app/services/coffee_service.dart';
 import 'package:j_app/widgets/coffee_card.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-
-
 class HomePage extends StatefulWidget {
-
-  const HomePage({super.key,});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends  State<HomePage>{
-
+class _HomePageState extends State<HomePage> {
   FirebaseAuth auth = FirebaseAuth.instance;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  final FlutterSecureStorage _storage =
+  const FlutterSecureStorage();
+
+  int wishlistRefresh = 0;
+
+  bool get isFiltering {
+    return searchController.text.trim().isNotEmpty ||
+        selectedPriceRange != "All";
+  }
 
   List<String> categories = ["All Coffee"];
+
   List<String> sliderImages = [
     "assets/images/coffee_background.webp",
     "assets/images/coffee_icons.jpg",
@@ -41,7 +47,9 @@ class _HomePageState extends  State<HomePage>{
 
   Future<void> loadCoffees() async {
     final data = await CoffeeService().getCoffees();
+
     if (!mounted) return;
+
     setState(() {
       coffees = data;
       isLoading = false;
@@ -63,7 +71,8 @@ class _HomePageState extends  State<HomePage>{
     final categorySet = <String>{};
 
     for (final coffee in data.values) {
-      final coffeeData = Map<dynamic, dynamic>.from(coffee);
+      final coffeeData =
+      Map<dynamic, dynamic>.from(coffee);
 
       final category =
       coffeeData['category']?.toString().trim();
@@ -72,6 +81,8 @@ class _HomePageState extends  State<HomePage>{
         categorySet.add(category);
       }
     }
+
+    if (!mounted) return;
 
     setState(() {
       categories = [
@@ -82,9 +93,18 @@ class _HomePageState extends  State<HomePage>{
   }
 
   bool matchesPrice(num price) {
-    if (selectedPriceRange == "Under \$3") return price < 3;
-    if (selectedPriceRange == "\$3 - \$4") return price >= 3 && price <= 4;
-    if (selectedPriceRange == "Above \$4") return price > 4;
+    if (selectedPriceRange == "Under \$3") {
+      return price < 3;
+    }
+
+    if (selectedPriceRange == "\$3 - \$4") {
+      return price >= 3 && price <= 4;
+    }
+
+    if (selectedPriceRange == "Above \$4") {
+      return price > 4;
+    }
+
     return true;
   }
 
@@ -95,8 +115,8 @@ class _HomePageState extends  State<HomePage>{
   }
 
   Future<void> signout() async {
-
-    final bool? remember = await showDialog<bool>(
+    final bool? remember =
+    await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -107,11 +127,9 @@ class _HomePageState extends  State<HomePage>{
               fontWeight: FontWeight.bold,
             ),
           ),
-
           content: const Text(
             "Do you want this device to remember your login?",
           ),
-
           actions: [
             TextButton(
               onPressed: () {
@@ -124,7 +142,6 @@ class _HomePageState extends  State<HomePage>{
                 ),
               ),
             ),
-
             TextButton(
               onPressed: () {
                 Navigator.pop(context, true);
@@ -147,7 +164,6 @@ class _HomePageState extends  State<HomePage>{
     }
 
     if (remember == false) {
-
       await _storage.delete(
         key: 'saved_email',
       );
@@ -204,10 +220,11 @@ class _HomePageState extends  State<HomePage>{
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-
       backgroundColor: Colors.grey.shade900,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -217,16 +234,29 @@ class _HomePageState extends  State<HomePage>{
                 left: 20,
                 right: 20,
                 top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,),
+                bottom:
+                MediaQuery.of(context).viewInsets.bottom +
+                    20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
-                  Align(alignment: Alignment.topRight,
-                    child: IconButton(onPressed: (){
-                      Navigator.pop(context);
-                    },
-                      icon: const Icon(Icons.cancel, color: Colors.white,size:30,),),),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(
+                        Icons.cancel,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+
                   TextField(
                     controller: searchController,
                     style: const TextStyle(
@@ -248,7 +278,8 @@ class _HomePageState extends  State<HomePage>{
                       filled: true,
                       fillColor: Colors.grey.shade800,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius:
+                        BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -264,29 +295,43 @@ class _HomePageState extends  State<HomePage>{
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 10),
+
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: ["All", "Under \$3", "\$3 - \$4", "Above \$4"].map((range) {
+                    children: [
+                      "All",
+                      "Under \$3",
+                      "\$3 - \$4",
+                      "Above \$4"
+                    ].map((range) {
                       return ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context); //filter bar closes after choosing the filter
+                          Navigator.pop(context);
+
                           setModalState(() {
                             selectedPriceRange = range;
-
                           });
+
                           setState(() {});
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: selectedPriceRange == range
-                              ? Color(0xFFC67C4E)
+                        style:
+                        ElevatedButton.styleFrom(
+                          backgroundColor:
+                          selectedPriceRange == range
+                              ? const Color(
+                            0xFFC67C4E,
+                          )
                               : Colors.white,
                         ),
                         child: Text(
                           range,
                           style: TextStyle(
-                            color: selectedPriceRange == range
+                            color:
+                            selectedPriceRange ==
+                                range
                                 ? Colors.white
                                 : Colors.black,
                           ),
@@ -294,6 +339,7 @@ class _HomePageState extends  State<HomePage>{
                       );
                     }).toList(),
                   ),
+
                   const SizedBox(height: 10),
                 ],
               ),
@@ -304,27 +350,34 @@ class _HomePageState extends  State<HomePage>{
     );
   }
 
-  TextEditingController searchController = TextEditingController();
-  PageController pageController = PageController();
+  TextEditingController searchController =
+  TextEditingController();
+
+  PageController pageController =
+  PageController();
 
   String selectedCoffee = "All Coffee";
-  String selectedPriceRange = "All";
-  bool isLoading = true;
-  int currentPage = 0;
-  Timer? sliderTimer;
 
+  String selectedPriceRange = "All";
+
+  bool isLoading = true;
+
+  int currentPage = 0;
+
+  Timer? sliderTimer;
 
   @override
   void initState() {
     super.initState();
+
     loadCoffees();
     loadCategories();
-
 
     sliderTimer = Timer.periodic(
       const Duration(seconds: 2),
           (timer) {
-        if (currentPage < sliderImages.length - 1) {
+        if (currentPage <
+            sliderImages.length - 1) {
           currentPage++;
         } else {
           currentPage = 0;
@@ -332,12 +385,12 @@ class _HomePageState extends  State<HomePage>{
 
         pageController.animateToPage(
           currentPage,
-          duration: const Duration(milliseconds: 500),
+          duration:
+          const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
       },
     );
-
   }
 
   @override
@@ -348,48 +401,70 @@ class _HomePageState extends  State<HomePage>{
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-
     if (isLoading) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(
             color: Color(0xFFC67C4E),
           ),
-
         ),
       );
     }
 
-    String searchText = searchController.text.toLowerCase();
+    String searchText =
+    searchController.text.toLowerCase();
 
-    List<Map<String, dynamic>> filteredCoffee = coffees.where((coffee) {
-      bool matchesCategory = selectedCoffee == "All Coffee" || coffee["category"] == selectedCoffee;
-      bool matchesSearch = coffee["name"].toString().toLowerCase().contains(searchText);
-      return matchesCategory && matchesSearch && matchesPrice(coffee["price"]);
+    List<Map<String, dynamic>> filteredCoffee =
+    coffees.where((coffee) {
+      bool matchesCategory =
+          selectedCoffee == "All Coffee" ||
+              coffee["category"] ==
+                  selectedCoffee;
+
+      bool matchesSearch =
+      coffee["name"]
+          .toString()
+          .toLowerCase()
+          .contains(searchText);
+
+      return matchesCategory &&
+          matchesSearch &&
+          matchesPrice(coffee["price"]);
     }).toList();
 
-    List<Map<String, dynamic>> popularCoffee = coffees.where((coffee) {
-      bool matchesCategory = selectedCoffee == "All Coffee" || coffee["category"] == selectedCoffee;
-      bool matchesSearch = coffee["name"].toString().toLowerCase().contains(searchText);
-      return matchesCategory && matchesSearch && coffee["popular"] == true && matchesPrice(coffee["price"]);
-    }).toList();
+    List<Map<String, dynamic>> popularCoffee =
+    coffees.where((coffee) {
+      bool matchesCategory =
+          selectedCoffee == "All Coffee" ||
+              coffee["category"] ==
+                  selectedCoffee;
 
+      bool matchesSearch =
+      coffee["name"]
+          .toString()
+          .toLowerCase()
+          .contains(searchText);
+
+      return matchesCategory &&
+          matchesSearch &&
+          coffee["popular"] == true &&
+          matchesPrice(coffee["price"]);
+    }).toList();
 
     return Scaffold(
-
       appBar: AppBar(
         backgroundColor: Colors.black87,
         toolbarHeight: 100,
         elevation: 0,
+
         leading: Builder(
           builder: (context) {
             return IconButton(
               onPressed: () {
-                Scaffold.of(context).openDrawer();
+                Scaffold.of(context)
+                    .openDrawer();
               },
               icon: const Icon(
                 Icons.menu,
@@ -398,49 +473,63 @@ class _HomePageState extends  State<HomePage>{
             );
           },
         ),
-        title: const Text("The Cafe",
+
+        title: const Text(
+          "The Cafe",
           style: TextStyle(
             color: Colors.white,
           ),
         ),
+
         actions: [
+
           Padding(
-            padding: const EdgeInsets.all (10),
+            padding: const EdgeInsets.all(10),
             child: Container(
               width: 45,
               height: 45,
               decoration: BoxDecoration(
-                color: const Color(0xFFC67C4E),
-                borderRadius: BorderRadius.circular(15),
+                color:
+                const Color(0xFFC67C4E),
+                borderRadius:
+                BorderRadius.circular(15),
               ),
-
               child: IconButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const WishlistPage(),
+                      builder: (context) =>
+                      const WishlistPage(),
                     ),
                   );
 
+                  if (!mounted) return;
+
+                  setState(() {
+                    wishlistRefresh++;
+                  });
                 },
                 icon: const Icon(
-                  Icons.favorite_rounded, color: Colors.white,
+                  Icons.favorite_rounded,
+                  color: Colors.white,
                 ),
               ),
             ),
           ),
 
           Padding(
-            padding: const EdgeInsets.only(right: 15),
+            padding:
+            const EdgeInsets.only(right: 15),
             child: Container(
               width: 45,
               height: 45,
               decoration: BoxDecoration(
-                color: const Color(0xFFC67C4E),
-                borderRadius: BorderRadius.circular(15),
+                color:
+                const Color(0xFFC67C4E),
+                borderRadius:
+                BorderRadius.circular(15),
               ),
-
               child: IconButton(
                 onPressed: () {
                   showFilterSheet();
@@ -455,394 +544,567 @@ class _HomePageState extends  State<HomePage>{
         ],
       ),
 
-      drawer: Drawer(backgroundColor: Colors.black87,child: ListView(children: [DrawerHeader(
+      drawer: Drawer(
+        backgroundColor: Colors.black87,
+        child: ListView(
+          children: [
+            DrawerHeader(
+              child: Align(
+                alignment:
+                Alignment.centerLeft,
+                child: Image.asset(
+                  "assets/images/app_icon.png",
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
 
-          child: Align(alignment: Alignment.centerLeft,
-        child: Image.asset(
-            "assets/images/app_icon.png",
-            width: 110,
-            height: 110,
-            fit: BoxFit.contain,
-          ),
+            const SizedBox(height: 15),
+
+            ListTile(
+              title: const Text(
+                "My Cart",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const CartPage(),
+                  ),
+                );
+              },
+            ),
+
+            ListTile(
+              title: const Text(
+                "Profile",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const ProfilePage(),
+                  ),
+                );
+              },
+            ),
+
+            // =========================
+            // DRAWER WISHLIST
+            // =========================
+            ListTile(
+              title: const Text(
+                "Wishlist",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () async {
+                // Close drawer
+                Navigator.pop(context);
+
+                // Open wishlist and WAIT
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const WishlistPage(),
+                  ),
+                );
+
+                // Refresh after returning
+                if (!mounted) return;
+
+                setState(() {
+                  wishlistRefresh++;
+                });
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            const Divider(),
+
+            const SizedBox(height: 10),
+
+            ListTile(
+              title: const Text(
+                "About us",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const AboutUsPage(),
+                  ),
+                );
+              },
+            ),
+
+            ListTile(
+              title: const Text(
+                "Terms & Conditions",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const TermsConditionsPage(),
+                  ),
+                );
+              },
+            ),
+
+            ListTile(
+              title: const Text(
+                "Privacy & Policy",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const PrivacyPolicyPage(),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            const Divider(),
+
+            const SizedBox(height: 10),
+
+            ListTile(
+              title: const Text(
+                "Sign Out",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: signout,
+            ),
+          ],
         ),
       ),
-        const SizedBox(height: 15),
-
-        ListTile(
-          title: const Text(
-            "My Cart",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CartPage(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text(
-            "Profile",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProfilePage(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text(
-            "Wishlist",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                const WishlistPage(),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 30),
-
-        const Divider(),
-
-        const SizedBox(height: 10),
-        ListTile(
-          title: const Text(
-            "About us",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AboutUsPage(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text(
-            "Terms & Conditions",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TermsConditionsPage(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text(
-            "Privacy & Policy",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PrivacyPolicyPage(),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 30),
-
-        const Divider(),
-
-        const SizedBox(height: 10),
-        ListTile(
-          title: const Text("Sign Out", style: TextStyle(
-            color: Colors.white,
-          ),),
-          onTap: signout,
-        ),
-
-      ],
-      ),
-      ),
-
-      body:  Stack(
-
+      body: Stack(
         children: [
-
           Column(
             children: [
 
-              SizedBox(height: 20,),
+              if (!isFiltering) ...[
+                const SizedBox(height: 20),
 
-              //image slider
-              Stack(
-                alignment: Alignment.bottomCenter,
-
-                children: [
-
-                  SizedBox(
-                    height: 180,
-
-                    child: PageView.builder(
-                      controller: pageController,
-                      itemCount: sliderImages.length,
-
-                      onPageChanged: (index) {
-                        setState(() {
-                          currentPage = index;
-                        });
-                      },
-
-                      itemBuilder: (context, index) {
-
-                        return Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                          ),
-
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-
-                          clipBehavior: Clip.antiAlias,
-
-                          child: Stack(
-                            children: [
-
-                              Positioned.fill(
-                                child: Image.asset(
-                                  sliderImages[index],
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-
-                              Positioned(
-                                bottom: 20,
-                                left: 20,
-
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/cart',
-                                    );
-                                  },
-
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                    const Color(0xFFC67C4E),
-                                    foregroundColor: Colors.white,
-
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-
-                                  child: const Text(
-                                    "Order Now",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),                  Positioned(
-                    bottom: 10,
-
-                    child: Row(
-                      children: List.generate(
+                Stack(
+                  alignment:
+                  Alignment.bottomCenter,
+                  children: [
+                    SizedBox(
+                      height: 180,
+                      child: PageView.builder(
+                        controller:
+                        pageController,
+                        itemCount:
                         sliderImages.length,
 
-                            (index) {
+                        onPageChanged: (index) {
+                          setState(() {
+                            currentPage =
+                                index;
+                          });
+                        },
 
+                        itemBuilder:
+                            (context, index) {
                           return Container(
-                            width: 7,
-                            height: 7,
-
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 5,
+                            margin:
+                            const EdgeInsets
+                                .symmetric(
+                              horizontal: 10,
                             ),
 
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                            decoration:
+                            BoxDecoration(
+                              borderRadius:
+                              BorderRadius
+                                  .circular(
+                                20,
+                              ),
+                            ),
 
-                              color: currentPage == index
-                                  ? const Color(0xFFC67C4E)
-                                  : Colors.grey,
+                            clipBehavior:
+                            Clip.antiAlias,
+
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child:
+                                  Image.asset(
+                                    sliderImages[
+                                    index],
+                                    fit: BoxFit
+                                        .cover,
+                                  ),
+                                ),
+
+                                Positioned(
+                                  bottom: 20,
+                                  left: 20,
+                                  child:
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator
+                                          .pushNamed(
+                                        context,
+                                        '/cart',
+                                      );
+                                    },
+                                    style:
+                                    ElevatedButton
+                                        .styleFrom(
+                                      backgroundColor:
+                                      const Color(
+                                        0xFFC67C4E,
+                                      ),
+                                      foregroundColor:
+                                      Colors
+                                          .white,
+                                      shape:
+                                      RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius
+                                            .circular(
+                                          10,
+                                        ),
+                                      ),
+                                    ),
+                                    child:
+                                    const Text(
+                                      "Order Now",
+                                      style:
+                                      TextStyle(
+                                        fontWeight:
+                                        FontWeight
+                                            .bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
 
-              //chips
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-
-                  child: Row(
-                    children: categories.map((category) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 5),
-
-                        child: ElevatedButton(
-                          onPressed: () {
-                            selectCoffee(category);
+                    Positioned(
+                      bottom: 10,
+                      child: Row(
+                        children:
+                        List.generate(
+                          sliderImages.length,
+                              (index) {
+                            return Container(
+                              width: 7,
+                              height: 7,
+                              margin:
+                              const EdgeInsets
+                                  .symmetric(
+                                horizontal: 5,
+                              ),
+                              decoration:
+                              BoxDecoration(
+                                shape:
+                                BoxShape.circle,
+                                color:
+                                currentPage ==
+                                    index
+                                    ? const Color(
+                                  0xFFC67C4E,
+                                )
+                                    : Colors
+                                    .grey,
+                              ),
+                            );
                           },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
 
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            selectedCoffee == category
-                                ? const Color(0xFFC67C4E)
-                                : Colors.white,
+                const SizedBox(height: 15),
+              ],
+
+              if (!isFiltering) ...[
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(
+                    horizontal: 10,
+                  ),
+                  child:
+                  SingleChildScrollView(
+                    scrollDirection:
+                    Axis.horizontal,
+                    child: Row(
+                      children:
+                      categories.map(
+                            (category) {
+                          return Padding(
+                            padding:
+                            const EdgeInsets
+                                .only(
+                              right: 5,
+                            ),
+                            child:
+                            ElevatedButton(
+                              onPressed: () {
+                                selectCoffee(
+                                  category,
+                                );
+                              },
+                              style:
+                              ElevatedButton
+                                  .styleFrom(
+                                backgroundColor:
+                                selectedCoffee ==
+                                    category
+                                    ? const Color(
+                                  0xFFC67C4E,
+                                )
+                                    : Colors
+                                    .white,
+                              ),
+                              child: Text(
+                                category,
+                                style: TextStyle(
+                                  color:
+                                  selectedCoffee ==
+                                      category
+                                      ? Colors
+                                      .white
+                                      : Colors
+                                      .black,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+              ],
+
+
+              Expanded(
+                child: ListView(
+                  children: [
+                    const SizedBox(height: 10),
+
+
+                    if (!isFiltering) ...[
+                      if (popularCoffee
+                          .isNotEmpty) ...[
+                        const Padding(
+                          padding:
+                          EdgeInsets.symmetric(
+                            horizontal: 10,
                           ),
-
                           child: Text(
-                            category,
-
+                            "Best Sellers",
                             style: TextStyle(
-                              color: selectedCoffee == category
-                                  ? Colors.white
-                                  : Colors.black,
+                              fontSize: 22,
+                              fontWeight:
+                              FontWeight.bold,
                             ),
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
 
-              SizedBox(height: 10,),
+                        SizedBox(
+                          height: 230,
+                          child:
+                          ListView.builder(
+                            scrollDirection:
+                            Axis.horizontal,
+                            padding:
+                            const EdgeInsets
+                                .symmetric(
+                              horizontal: 10,
+                            ),
+                            itemCount:
+                            popularCoffee.length,
 
-              Expanded(
-                  child: ListView(
-                    children: [
+                            itemBuilder: (context, index) {
+                              return CoffeeCard(
+                                coffee: popularCoffee[index],
 
-                      const SizedBox(height: 10),
-                      if (popularCoffee.isNotEmpty) ...[
+                                width: 180,
+                                imageHeight: 120,
+                                padding: 10,
+                                nameSize: 18,
+                                priceSize: 16,
+
+                                refresh: wishlistRefresh,
+
+                                onWishlistChanged: () {
+                                  setState(() {
+                                    wishlistRefresh++;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+                      ],
+
+                      const Padding(
+                        padding:
+                        EdgeInsets.symmetric(
+                          horizontal: 10,
+                        ),
+                        child: Text(
+                          "All Coffee",
+                          style: TextStyle(
+                            fontWeight:
+                            FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    if (isFiltering)
+                      Padding(
+                        padding:
+                        const EdgeInsets
+                            .symmetric(
+                          horizontal: 10,
+                        ),
+                        child: Text(
+                          filteredCoffee.isEmpty
+                              ? "No coffee found"
+                              : "Search Results",
+                          style:
+                          const TextStyle(
+                            fontWeight:
+                            FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 10),
 
                     Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: const Text(
-                    "Best Sellers",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      padding:
+                      const EdgeInsets
+                          .symmetric(
+                        horizontal: 10,
+                      ),
+
+                      child:
+                      filteredCoffee.isEmpty
+                          ? const Center(
+                        child:
+                        Padding(
+                          padding:
+                          EdgeInsets
+                              .all(
+                            40,
+                          ),
+                          child: Text(
+                            "No coffee matches your filter.",
+                            style:
+                            TextStyle(
+                              color:
+                              Colors
+                                  .grey,
+                              fontSize:
+                              16,
+                            ),
+                          ),
+                        ),
+                      )
+                          : GridView.builder(
+                        shrinkWrap: true,
+
+                        physics:
+                        const NeverScrollableScrollPhysics(),
+
+                        itemCount:
+                        filteredCoffee
+                            .length,
+
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount:
+                          2,
+                          crossAxisSpacing:
+                          10,
+                          mainAxisSpacing:
+                          10,
+                          childAspectRatio:
+                          0.65,
+                        ),
+
+                        itemBuilder: (context, index) {
+                          return CoffeeCard(
+                            coffee: filteredCoffee[index],
+
+                            padding: 15,
+                            nameSize: 20,
+                            priceSize: 18,
+
+                            refresh: wishlistRefresh,
+
+                            onWishlistChanged: () {
+                              setState(() {
+                                wishlistRefresh++;
+                              });
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-
-                SizedBox(
-                  height: 230,
-
-                  child:
-                  SizedBox(
-                    height: 230,
-
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: popularCoffee.length,
-
-                      itemBuilder: (context, index) {
-                        return CoffeeCard(
-                          coffee: popularCoffee[index],
-                          width: 180,
-                          imageHeight: 120,
-                          padding: 10,
-                          nameSize: 18,
-                          priceSize: 16,
-                        );
-                      },
-                    ),
-                  ),                ),
-
-                SizedBox(height: 10,),
-                ],
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: const Text("All Coffee", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 22),),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child:
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredCoffee.length,
-
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 0.65,
-                    ),
-
-                    itemBuilder: (context, index) {
-                      return CoffeeCard(
-                        coffee: filteredCoffee[index],
-                        padding: 15,
-                        nameSize: 20,
-                        priceSize: 18,
-                      );
-                    },
-                  ),                ),
-              ],)
-
               ),
             ],
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(
+
+      bottomNavigationBar:
+      const BottomNavBar(
         selectedIndex: 0,
       ),
     );
   }
-
-
 }
-

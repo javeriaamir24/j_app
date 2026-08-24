@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class NotificationSender {
-
   static const String proxyUrl =
       'https://gorgeous-starship-84f940.netlify.app/.netlify/functions/send-notification';
 
@@ -24,10 +23,16 @@ class NotificationSender {
         }),
       );
 
-      print('Notification proxy status: ${response.statusCode}');
-      print('Notification proxy response: ${response.body}');
+      print(
+        'Notification proxy status: ${response.statusCode}',
+      );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      print(
+        'Notification proxy response: ${response.body}',
+      );
+
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300) {
         print('Notification sent successfully');
       } else {
         print('Notification failed');

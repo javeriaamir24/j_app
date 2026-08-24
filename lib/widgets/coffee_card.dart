@@ -5,21 +5,31 @@ import 'package:j_app/screens/customer/coffee_detail_screen.dart';
 import 'package:j_app/widgets/wishlist_button.dart';
 
 class CoffeeCard extends StatelessWidget {
+
   final Map<String, dynamic> coffee;
+
   final double width;
   final double imageHeight;
   final double padding;
   final double nameSize;
   final double priceSize;
 
+  final int refresh;
+
+  final VoidCallback? onWishlistChanged;
+
   const CoffeeCard({
     super.key,
     required this.coffee,
+
     this.width = double.infinity,
     this.imageHeight = 120,
     this.padding = 15,
     this.nameSize = 20,
     this.priceSize = 18,
+
+    this.refresh = 0,
+    this.onWishlistChanged,
   });
 
   Future<void> addItemToCart() async {
@@ -38,32 +48,51 @@ class CoffeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return SizedBox(
       width: width,
 
       child: InkWell(
-        onTap: () {
-          Navigator.push(
+
+        onTap: () async {
+
+          // Open Coffee Detail Page
+          final result = await Navigator.push(
             context,
+
             MaterialPageRoute(
-              builder: (context) => CoffeeDetailPage(
-                coffee: coffee,
-              ),
+              builder: (context) =>
+                  CoffeeDetailPage(
+                    coffee: coffee,
+                  ),
             ),
           );
+
+          // If wishlist was changed
+          // on Detail Page
+          if (result == true) {
+            onWishlistChanged?.call();
+          }
         },
 
         child: Card(
-          margin: const EdgeInsets.only(right: 10),
 
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+          margin:
+          const EdgeInsets.only(right: 10),
+
+          shape:
+          RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(20),
           ),
 
-          clipBehavior: Clip.antiAlias,
+          clipBehavior:
+          Clip.antiAlias,
 
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
 
             children: [
 
@@ -72,8 +101,11 @@ class CoffeeCard extends StatelessWidget {
 
                   Image.asset(
                     coffee["image"],
+
                     height: imageHeight,
+
                     width: double.infinity,
+
                     fit: BoxFit.cover,
                   ),
 
@@ -83,15 +115,23 @@ class CoffeeCard extends StatelessWidget {
 
                     child: WishlistButton(
                       coffee: coffee,
+
+                      refresh: refresh,
+
+                      onChanged: () {
+                        onWishlistChanged?.call();
+                      },
                     ),
                   ),
                 ],
               ),
 
               Padding(
-                padding: EdgeInsets.all(padding),
+                padding:
+                EdgeInsets.all(padding),
 
                 child: Column(
+
                   crossAxisAlignment:
                   CrossAxisAlignment.start,
 
@@ -101,58 +141,91 @@ class CoffeeCard extends StatelessWidget {
                       coffee["name"],
 
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+
+                      overflow:
+                      TextOverflow.ellipsis,
 
                       style: TextStyle(
                         fontSize: nameSize,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                        FontWeight.bold,
                       ),
                     ),
 
+                    // DESCRIPTION
                     Text(
                       coffee["description"],
 
-                      style: const TextStyle(
+                      maxLines: 2,
+
+                      overflow:
+                      TextOverflow.ellipsis,
+
+                      style:
+                      const TextStyle(
                         fontSize: 10,
                       ),
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
+                    // PRICE + CART BUTTON
                     Row(
+
                       mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      MainAxisAlignment
+                          .spaceBetween,
 
                       children: [
 
+                        // PRICE
                         Text(
                           "\$${coffee["price"]}",
 
                           style: TextStyle(
-                            fontSize: priceSize,
-                            fontWeight: FontWeight.bold,
+                            fontSize:
+                            priceSize,
+
+                            fontWeight:
+                            FontWeight.bold,
                           ),
                         ),
 
+                        // ADD TO CART
                         InkWell(
 
-                          onTap: addItemToCart,
+                          onTap:
+                          addItemToCart,
 
                           child: Container(
+
                             width: 30,
                             height: 30,
 
-                            decoration: BoxDecoration(
+                            decoration:
+                            BoxDecoration(
+
                               color:
-                              const Color(0xFFC67C4E),
+                              const Color(
+                                0xFFC67C4E,
+                              ),
 
                               borderRadius:
-                              BorderRadius.circular(10),
+                              BorderRadius
+                                  .circular(
+                                10,
+                              ),
                             ),
 
-                            child: const Icon(
+                            child:
+                            const Icon(
                               Icons.add,
-                              color: Colors.white,
+
+                              color:
+                              Colors.white,
+
                               size: 20,
                             ),
                           ),

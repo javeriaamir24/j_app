@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'signup_page_screen.dart';
 import 'forget_password_page.dart';
 import 'customer/home_page_screen.dart';
@@ -10,7 +10,6 @@ import 'first_Screen.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:j_app/services/notification_service.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -247,6 +246,16 @@ class _LoginPageState extends State<LoginPage>
         }
         return;
       }
+      final fcmToken =
+      await FirebaseMessaging.instance.getToken();
+
+      if (fcmToken != null) {
+        await FirebaseDatabase.instance
+            .ref('users/${user.uid}')
+            .update({
+          'fcmToken': fcmToken,
+        });
+      }
       await _storage.write(
         key: 'saved_email',
         value: typedEmail,
@@ -282,7 +291,6 @@ class _LoginPageState extends State<LoginPage>
       print("LOGIN UID: ${user.uid}");
       print("USER ROLE: $role");
 
-      await OneSignal.login(user.uid);
 
       Fluttertoast.showToast(
         msg: "Logged In Successfully",
