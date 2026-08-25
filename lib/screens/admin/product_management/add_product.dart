@@ -261,6 +261,15 @@ class _AddProductPageState extends State<AddProductPage> {
                 onPressed: _isLoading
                     ? null
                     : pickImage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                  const Color(0xFFC67C4E),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                    BorderRadius.circular(12),
+                  ),
+                ),
 
                 icon: const Icon(
                   Icons.image,
