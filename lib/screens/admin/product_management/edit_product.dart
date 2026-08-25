@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../../../models/product_model.dart';
 import '../../../services/product_service.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -25,10 +29,71 @@ class _EditProductPageState
   late TextEditingController _descriptionController;
   late TextEditingController _detailedDescriptionController;
   late TextEditingController _categoryController;
-
   late bool _popular;
-
   bool _isLoading = false;
+
+  FilePickerResult? result;
+  File? _selectedImage;
+
+  Future<void> pickImage() async {
+    final pickedResult = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (pickedResult != null &&
+        pickedResult.files.single.path != null) {
+      setState(() {
+        result = pickedResult;
+        _selectedImage = File(
+          pickedResult.files.single.path!,
+        );
+      });
+    }
+  }
+
+  Future<String?> uploadImage(File imageFile) async {
+    final cloudName = 'qaakxnsu';
+    final uploadPreset = 'cafe_products';
+
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
+
+    final request = http.MultipartRequest(
+      'POST',
+      url,
+    );
+
+    request.fields['upload_preset'] = uploadPreset;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+      ),
+    );
+
+    try {
+      final response = await request.send();
+
+      final responseData =
+      await response.stream.bytesToString();
+
+      print('CLOUDINARY STATUS: ${response.statusCode}');
+      print('CLOUDINARY RESPONSE: $responseData');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(responseData);
+
+        return data['secure_url'];
+      }
+
+      return null;
+    } catch (e) {
+      print('CLOUDINARY ERROR: $e');
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -49,16 +114,17 @@ class _EditProductPageState
 
   Future<void> _updateProduct() async {
     final name = _nameController.text.trim();
-
     final priceText = _priceController.text.trim();
-
     final description = _descriptionController.text.trim();
-
-    final detailedDescription = _detailedDescriptionController.text.trim();
-
+    final detailedDescription =
+    _detailedDescriptionController.text.trim();
     final category = _categoryController.text.trim();
 
-    if (name.isEmpty || priceText.isEmpty || description.isEmpty || detailedDescription.isEmpty || category.isEmpty) {
+    if (name.isEmpty ||
+        priceText.isEmpty ||
+        description.isEmpty ||
+        detailedDescription.isEmpty ||
+        category.isEmpty) {
       Fluttertoast.showToast(
         msg: 'Please fill all fields',
         toastLength: Toast.LENGTH_SHORT,
@@ -85,6 +151,17 @@ class _EditProductPageState
     });
 
     try {
+      String? imageUrl;
+
+      // Upload only if a new image was selected
+      if (_selectedImage != null) {
+        imageUrl = await uploadImage(_selectedImage!);
+
+        if (imageUrl == null) {
+          throw Exception('Image upload failed');
+        }
+      }
+
       await _productService.updateProduct(
         id: widget.product.id,
         name: name,
@@ -93,6 +170,7 @@ class _EditProductPageState
         description: description,
         detailedDescription: detailedDescription,
         popular: _popular,
+        imageUrl: imageUrl,
       );
 
       Fluttertoast.showToast(
@@ -102,9 +180,11 @@ class _EditProductPageState
       );
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
+      print('Update product error: $e');
+
       Fluttertoast.showToast(
         msg: 'Failed to update product',
         toastLength: Toast.LENGTH_SHORT,
@@ -118,7 +198,6 @@ class _EditProductPageState
       }
     }
   }
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -164,19 +243,75 @@ class _EditProductPageState
 
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
-
-                  borderRadius:
-                  BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(15),
                 ),
 
-                child: const Icon(
-                  Icons.coffee,
-                  size: 70,
-                  color: Colors.black87,
+                child: _selectedImage != null
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+
+                  child: Image.file(
+                    _selectedImage!,
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                )
+                    : widget.product.image.startsWith('http')
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+
+                  child: Image.network(
+                    widget.product.image,
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+
+                    errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                        ) {
+                      return const Icon(
+                        Icons.broken_image,
+                        size: 70,
+                        color: Colors.grey,
+                      );
+                    },
+                  ),
+                )
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+
+                  child: Image.asset(
+                    widget.product.image,
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
 
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+
+              child: ElevatedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : pickImage,
+
+                icon: const Icon(
+                  Icons.image,
+                ),
+
+                label: const Text(
+                  'Choose New Image',
+                ),
+              ),
+            ),
             const SizedBox(height: 30),
 
             const Text(
@@ -221,7 +356,7 @@ class _EditProductPageState
               ),
 
               decoration: InputDecoration(
-                prefixText: 'Rs. ',
+
 
                 border: OutlineInputBorder(
                   borderRadius:

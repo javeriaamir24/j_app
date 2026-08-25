@@ -136,13 +136,53 @@ class _CartPageState extends State<CartPage> {
                         child: Row(
                           children: [
 
-                            Image.asset(
+                            item["image"]
+                                .toString()
+                                .startsWith("http")
+                                ? Image.network(
                               item["image"],
                               width: 80,
                               height: 80,
                               fit: BoxFit.cover,
-                            ),
 
+                              errorBuilder: (
+                                  context,
+                                  error,
+                                  stackTrace,
+                                  ) {
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              },
+                            )
+                                : Image.asset(
+                              item["image"],
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+
+                              errorBuilder: (
+                                  context,
+                                  error,
+                                  stackTrace,
+                                  ) {
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(
+                                    Icons.coffee,
+                                    color: Colors.black87,
+                                  ),
+                                );
+                              },
+                            ),
                             const SizedBox(width: 10),
 
                             Expanded(

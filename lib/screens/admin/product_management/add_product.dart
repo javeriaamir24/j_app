@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-
 import '../../../services/product_service.dart';
 
 class AddProductPage extends StatefulWidget {
@@ -17,13 +15,10 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   final ProductService _productService = ProductService();
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _descriptionController =
-  TextEditingController();
-  final TextEditingController _detailedDescriptionController =
-  TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _detailedDescriptionController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
 
   bool _popular = false;
@@ -31,10 +26,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
   FilePickerResult? result;
   File? _selectedImage;
-
-  // =========================
-  // PICK IMAGE
-  // =========================
 
   Future<void> pickImage() async {
     final pickedResult = await FilePicker.platform.pickFiles(
@@ -51,10 +42,6 @@ class _AddProductPageState extends State<AddProductPage> {
       });
     }
   }
-
-  // =========================
-  // UPLOAD IMAGE TO CLOUDINARY
-  // =========================
 
   Future<String?> uploadImage(File imageFile) async {
     final cloudName = 'qaakxnsu';
@@ -78,27 +65,29 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
 
-    final response = await request.send();
+    try {
+      final response = await request.send();
 
-    final responseData =
-    await response.stream.bytesToString();
+      final responseData =
+      await response.stream.bytesToString();
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(responseData);
+      print('==============================');
+      print('CLOUDINARY STATUS: ${response.statusCode}');
+      print('CLOUDINARY RESPONSE: $responseData');
+      print('==============================');
 
-      return data['secure_url'];
-    } else {
-      print(
-        'Cloudinary upload failed: $responseData',
-      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(responseData);
 
+        return data['secure_url'];
+      }
+
+      return null;
+    } catch (e) {
+      print('CLOUDINARY ERROR: $e');
       return null;
     }
   }
-
-  // =========================
-  // ADD PRODUCT
-  // =========================
 
   Future<void> _addProduct() async {
     final name = _nameController.text.trim();
@@ -197,10 +186,6 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-  // =========================
-  // DISPOSE
-  // =========================
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -211,10 +196,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
     super.dispose();
   }
-
-  // =========================
-  // UI
-  // =========================
 
   @override
   Widget build(BuildContext context) {
@@ -241,9 +222,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
           children: [
 
-            // =========================
-            // IMAGE PREVIEW
-            // =========================
 
             Center(
               child: Container(
@@ -275,9 +253,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 12),
 
-            // =========================
-            // CHOOSE IMAGE BUTTON
-            // =========================
 
             SizedBox(
               width: double.infinity,
@@ -299,9 +274,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 30),
 
-            // =========================
-            // PRODUCT NAME
-            // =========================
 
             const Text(
               'Product Name',
@@ -328,9 +300,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 18),
 
-            // =========================
-            // PRICE
-            // =========================
 
             const Text(
               'Price',
@@ -362,9 +331,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 18),
 
-            // =========================
-            // CATEGORY
-            // =========================
 
             const Text(
               'Category',
@@ -391,9 +357,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 18),
 
-            // =========================
-            // DESCRIPTION
-            // =========================
 
             const Text(
               'Description',
@@ -423,9 +386,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 18),
 
-            // =========================
-            // DETAILED DESCRIPTION
-            // =========================
 
             const Text(
               'Detailed Description',
@@ -484,9 +444,6 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 20),
 
-            // =========================
-            // ADD PRODUCT BUTTON
-            // =========================
 
             SizedBox(
               width: double.infinity,

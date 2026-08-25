@@ -147,7 +147,8 @@ class _ProductsPageState extends State<ProductsPage> {
 
                         clipBehavior: Clip.antiAlias,
 
-                        child: Image.asset(
+                        child: product.image.startsWith('http')
+                            ? Image.network(
                           product.image,
 
                           fit: BoxFit.cover,
@@ -160,8 +161,21 @@ class _ProductsPageState extends State<ProductsPage> {
                               color: Colors.black87,
                             );
                           },
-                        ),
-                      ),
+                        )
+                            : Image.asset(
+                          product.image,
+
+                          fit: BoxFit.cover,
+
+                          errorBuilder:
+                              (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.coffee,
+                              size: 38,
+                              color: Colors.black87,
+                            );
+                          },
+                        ),                      ),
 
                       const SizedBox(width: 14),
 
@@ -187,7 +201,7 @@ class _ProductsPageState extends State<ProductsPage> {
                             const SizedBox(height: 5),
 
                             Text(
-                              'Rs. ${product.price.toStringAsFixed(2)}',
+                              '${product.price.toStringAsFixed(2)}',
 
                               style: const TextStyle(
                                 fontSize: 14,

@@ -121,7 +121,7 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
               ? Image.network(
             widget.coffee["image"],
             width: double.infinity,
-            height: 250,
+            height: 300,
             fit: BoxFit.cover,
             errorBuilder: (
                 context,
@@ -130,7 +130,7 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
                 ) {
               return Container(
                 width: double.infinity,
-                height: 250,
+                height: 300,
                 color: Colors.grey.shade200,
                 child: const Icon(
                   Icons.broken_image,

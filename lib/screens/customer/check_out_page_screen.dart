@@ -582,13 +582,54 @@ class _CheckOutPageState extends State<CheckOutPage> {
 
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
+                      child:
+                      item["image"]
+                          .toString()
+                          .startsWith("http")
+                          ? Image.network(
                         item["image"],
-                        width: 55,
-                        height: 55,
+                        width: 80,
+                        height: 80,
                         fit: BoxFit.cover,
-                      ),
-                    ),
+
+                        errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                            ) {
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey.shade200,
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      )
+                          : Image.asset(
+                        item["image"],
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+
+                        errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                            ) {
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey.shade200,
+                            child: const Icon(
+                              Icons.coffee,
+                              color: Colors.black87,
+                            ),
+                          );
+                        },
+                      ),                    ),
 
                     title: Text(
                       item["name"],
