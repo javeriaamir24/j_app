@@ -9,6 +9,10 @@ import 'saved_screen.dart';
 import 'customer/home_page_screen.dart';
 import 'admin/users_page.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:j_app/firebase_options.dart';
+import 'package:j_app/services/notification_service.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -19,13 +23,25 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
 
+
+
   final FlutterSecureStorage _storage =
   const FlutterSecureStorage();
+Future <void> initialize() async{
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
+  await NotificationService.initialize();
+
+
+}
   @override
   void initState() {
     super.initState();
+    initialize();
     checkLogin();
+
   }
 
   Future<void> checkLogin() async {

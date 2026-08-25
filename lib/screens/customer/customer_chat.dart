@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:j_app/services/notification_sender.dart';
+import 'package:j_app/widgets/customers_bottom_nav_bar.dart';
+
 
 class CustomerChat extends StatefulWidget {
   const CustomerChat({super.key});
@@ -576,6 +578,9 @@ class _CustomerChatState extends State<CustomerChat> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: const BottomNavBar(
+        selectedIndex: 3,
       ),
     );
   }

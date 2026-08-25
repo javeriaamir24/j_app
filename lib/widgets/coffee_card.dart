@@ -56,7 +56,6 @@ class CoffeeCard extends StatelessWidget {
 
         onTap: () async {
 
-          // Open Coffee Detail Page
           final result = await Navigator.push(
             context,
 
@@ -68,8 +67,6 @@ class CoffeeCard extends StatelessWidget {
             ),
           );
 
-          // If wishlist was changed
-          // on Detail Page
           if (result == true) {
             onWishlistChanged?.call();
           }

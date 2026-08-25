@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import '../../../services/product_service.dart';
+import 'package:j_app/widgets/admin_bottom_nav_bar.dart';
+
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -499,6 +501,9 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: const AdminNavBar(
+        selectedIndex: 1,
       ),
     );
   }

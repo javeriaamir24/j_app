@@ -201,7 +201,7 @@ class _OrderManagementState
 
                       const SizedBox(height: 8),
 
-                      // Payment
+
                       Text(
                         'Payment: ${order.paymentMethod}',
                         style: const TextStyle(
@@ -214,7 +214,7 @@ class _OrderManagementState
 
                       // Total
                       Text(
-                        'Total: Rs. ${order.totalPrice.toStringAsFixed(2)}',
+                        'Total: \$ ${order.totalPrice.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight:

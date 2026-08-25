@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:j_app/services/notification_sender.dart';
+import 'package:j_app/widgets/admin_bottom_nav_bar.dart';
 
 class AdminChat extends StatefulWidget {
 
@@ -507,6 +508,9 @@ class _AdminChatState extends State<AdminChat> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: const AdminNavBar(
+        selectedIndex: 0,
       ),
     );
   }

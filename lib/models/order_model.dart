@@ -9,6 +9,8 @@ class OrderModel {
   final double totalPrice;
   final dynamic items;
   final String status;
+  final String phone;
+  final String address;
 
   OrderModel({
     required this.id,
@@ -21,6 +23,8 @@ class OrderModel {
     required this.totalPrice,
     required this.items,
     required this.status,
+    required this.phone,
+    required this.address,
   });
 
   factory OrderModel.fromMap(
@@ -31,10 +35,18 @@ class OrderModel {
     final customerData = data['customer'];
 
     String customerName = '';
+    String customerPhone = '';
+    String customerAddress = '';
+
 
     if (customerData is Map) {
       customerName =
           customerData['name']?.toString() ?? '';
+      customerPhone =
+          customerData['phone']?.toString() ?? '';
+
+      customerAddress =
+          customerData['address']?.toString() ?? '';
     } else {
       customerName =
           customerData?.toString() ?? '';
@@ -44,6 +56,8 @@ class OrderModel {
       id: id,
       customerId: customerId,
       customer: customerName,
+      phone: customerPhone,
+      address: customerAddress,
       orderDate: data['orderDate']?.toString() ?? '',
       paymentMethod:
       data['paymentMethod']?.toString() ?? '',

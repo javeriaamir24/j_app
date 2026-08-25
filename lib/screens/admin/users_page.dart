@@ -334,7 +334,21 @@ class _UsersPageState extends State<UsersPage> {
                             backgroundColor:
                             const Color(0xFFC67C4E),
 
-                            child: Text(
+                            backgroundImage:
+                            user["profile_picture"] != null &&
+                                user["profile_picture"]
+                                    .toString()
+                                    .isNotEmpty
+                                ? NetworkImage(
+                              user["profile_picture"].toString(),
+                            )
+                                : null,
+
+                            child: user["profile_picture"] == null ||
+                                user["profile_picture"]
+                                    .toString()
+                                    .isEmpty
+                                ? Text(
                               name.isNotEmpty
                                   ? name[0].toUpperCase()
                                   : "?",
@@ -344,9 +358,9 @@ class _UsersPageState extends State<UsersPage> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
-                            ),
+                            )
+                                : null,
                           ),
-
                           title: Row(
                             children: [
 

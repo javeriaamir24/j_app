@@ -348,6 +348,7 @@ bool hidden2 = true;
           "email": email,
           "password": password,
           "role": "customer",
+          "profile_picture" : "",
 
         });
       }

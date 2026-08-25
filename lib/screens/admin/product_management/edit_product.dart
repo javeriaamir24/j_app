@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:j_app/widgets/admin_bottom_nav_bar.dart';
+
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -519,6 +521,9 @@ class _EditProductPageState
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: const AdminNavBar(
+        selectedIndex: 1,
       ),
     );
   }
