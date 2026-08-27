@@ -14,6 +14,7 @@ import 'terms_conditions_page.dart';
 import 'package:j_app/services/coffee_service.dart';
 import 'package:j_app/widgets/coffee_card.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -413,13 +414,10 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    String searchText =
-    searchController.text.toLowerCase();
+    String searchText = searchController.text.toLowerCase();
 
-    List<Map<String, dynamic>> filteredCoffee =
-    coffees.where((coffee) {
-      bool matchesCategory =
-          selectedCoffee == "All Coffee" ||
+    List<Map<String, dynamic>> filteredCoffee = coffees.where((coffee) {
+      bool matchesCategory = selectedCoffee == "All Coffee" ||
               coffee["category"] ==
                   selectedCoffee;
 
@@ -453,7 +451,60 @@ class _HomePageState extends State<HomePage> {
           matchesPrice(coffee["price"]);
     }).toList();
 
-    return Scaffold(
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+
+          final shouldExit = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) {
+              return AlertDialog(
+                title: const Text(
+                  "Exit App?",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: const Text(
+                  "Are you sure you want to exit?",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext, false);
+                    },
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext, true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC67C4E),
+                    ),
+                    child: const Text(
+                      "Exit",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (shouldExit == true) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black87,
         toolbarHeight: 100,
@@ -1101,10 +1152,13 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      bottomNavigationBar:
-      const BottomNavBar(
-        selectedIndex: 0,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 0,
+        ),
       ),
+        ),
     );
   }
 }

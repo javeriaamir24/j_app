@@ -311,8 +311,11 @@ class _ProductsPageState extends State<ProductsPage> {
         },
       ),
 
-      bottomNavigationBar: const AdminNavBar(
-        selectedIndex: 1,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 1,
+        ),
       ),
     );
   }

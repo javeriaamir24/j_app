@@ -149,6 +149,8 @@ class _CustomerChatState extends State<CustomerChat> {
       receiverId: adminId!,
       senderName: customer.displayName ?? "Customer",
       message: message,
+      type: "chat_customer",
+      senderId: customer.uid,
     );
   }
 
@@ -579,8 +581,11 @@ class _CustomerChatState extends State<CustomerChat> {
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(
-        selectedIndex: 3,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 3,
+        ),
       ),
     );
   }

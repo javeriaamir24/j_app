@@ -388,8 +388,11 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(
-        selectedIndex: 0,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 0,
+        ),
       ),
     );
   }

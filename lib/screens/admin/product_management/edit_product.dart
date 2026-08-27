@@ -522,8 +522,11 @@ class _EditProductPageState
           ],
         ),
       ),
-      bottomNavigationBar: const AdminNavBar(
-        selectedIndex: 1,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 1,
+        ),
       ),
     );
   }

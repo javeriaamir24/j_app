@@ -282,9 +282,11 @@ class OrderConfirmationPage extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar:
-      const BottomNavBar(
-        selectedIndex: 1,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 1,
+        ),
       ),
     );
   }

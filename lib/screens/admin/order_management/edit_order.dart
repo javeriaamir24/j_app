@@ -379,9 +379,11 @@ class _EditOrderPageState extends State<EditOrderPage> {
         ),
       ),
 
-      bottomNavigationBar:
-      const AdminNavBar(
-        selectedIndex: 2,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 2,
+        ),
       ),
     );
   }

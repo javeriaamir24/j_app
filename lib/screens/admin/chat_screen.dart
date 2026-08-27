@@ -93,7 +93,10 @@ class _AdminChatState extends State<AdminChat> {
       receiverId: widget.customerId,
       senderName: "Customer Support",
       message: message,
+      type: "chat_admin",
+      senderId: auth.currentUser?.uid,
     );
+
   }
   String formatTime(dynamic timestamp) {
 
@@ -509,8 +512,11 @@ class _AdminChatState extends State<AdminChat> {
           ),
         ],
       ),
-      bottomNavigationBar: const AdminNavBar(
-        selectedIndex: 0,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 0,
+        ),
       ),
     );
   }

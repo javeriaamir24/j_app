@@ -502,8 +502,11 @@ class _AddProductPageState extends State<AddProductPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const AdminNavBar(
-        selectedIndex: 1,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 1,
+        ),
       ),
     );
   }

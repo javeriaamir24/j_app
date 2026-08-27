@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,35 +18,45 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() =>
-      _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
-
-
   final FlutterSecureStorage _storage =
   const FlutterSecureStorage();
-Future <void> initialize() async{
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
 
-  await NotificationService.initialize();
-
-
-}
   @override
   void initState() {
     super.initState();
-    initialize();
-    checkLogin();
+    startApp();
+  }
 
+  Future<void> startApp() async {
+    print("START APP");
+
+    try {
+      print("Initializing Firebase...");
+
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      print("Firebase initialized");
+
+      print("Initializing notifications...");
+
+      await NotificationService.initialize();
+
+      print("Notifications initialized");
+
+      await checkLogin();
+    } catch (e, stackTrace) {
+      print("START APP ERROR: $e");
+      print(stackTrace);
+    }
   }
 
   Future<void> checkLogin() async {
-
     await Future.delayed(
       const Duration(seconds: 2),
     );
@@ -58,12 +69,10 @@ Future <void> initialize() async{
         FirebaseAuth.instance.currentUser;
 
     if (user == null || !user.emailVerified) {
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-          const FirstScreen(),
+          builder: (context) => const FirstScreen(),
         ),
       );
 
@@ -81,12 +90,10 @@ Future <void> initialize() async{
     }
 
     if (role == "admin") {
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-          const UsersPage(),
+          builder: (context) => const UsersPage(),
         ),
       );
 
@@ -94,7 +101,6 @@ Future <void> initialize() async{
     }
 
     if (role == "customer") {
-
       final String? remember =
       await _storage.read(
         key: 'remember_login',
@@ -105,12 +111,10 @@ Future <void> initialize() async{
       }
 
       if (remember == 'true') {
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-            const SavedScreen(),
+            builder: (context) => const SavedScreen(),
           ),
         );
 
@@ -120,27 +124,29 @@ Future <void> initialize() async{
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-          const HomePage(),
+          builder: (context) => const HomePage(),
         ),
       );
 
       return;
     }
+
     await FirebaseAuth.instance.signOut();
+
+    if (!mounted) {
+      return;
+    }
 
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-        const FirstScreen(),
+        builder: (context) => const FirstScreen(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: Center(
         child: Image.asset(

@@ -544,9 +544,11 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
 
-      bottomNavigationBar:
-      const BottomNavBar(
-        selectedIndex: 4,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 4,
+        ),
       ),
     );
   }

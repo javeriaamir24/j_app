@@ -22,7 +22,6 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   http: ^1.6.0
   firebase_messaging: ^16.5.0
-  flutter_stripe: ^14.0.0
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_test:

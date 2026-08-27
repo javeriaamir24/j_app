@@ -271,9 +271,11 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         },
       ),
 
-      bottomNavigationBar:
-      const BottomNavBar(
-        selectedIndex: 2,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const BottomNavBar(
+          selectedIndex: 2,
+        ),
       ),
     );
   }

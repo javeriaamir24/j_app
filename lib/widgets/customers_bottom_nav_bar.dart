@@ -21,21 +21,21 @@ class BottomNavBar extends StatelessWidget {
     switch (index) {
 
       case 0:
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
           '/home',
         );
         break;
 
       case 1:
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
           '/cart',
         );
         break;
 
       case 2:
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
           '/order_history',
         );
@@ -52,7 +52,7 @@ class BottomNavBar extends StatelessWidget {
         break;
 
       case 4:
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
           '/profile',
         );

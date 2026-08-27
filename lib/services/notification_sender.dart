@@ -9,6 +9,8 @@ class NotificationSender {
     required String receiverId,
     required String senderName,
     required String message,
+    required String type,
+    String? senderId,
   }) async {
     try {
       final response = await http.post(
@@ -20,6 +22,8 @@ class NotificationSender {
           'receiverId': receiverId,
           'senderName': senderName,
           'message': message,
+          'type': type,
+          'senderId': senderId,
         }),
       );
 

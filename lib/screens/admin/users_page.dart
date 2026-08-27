@@ -452,8 +452,11 @@ class _UsersPageState extends State<UsersPage> {
             ),
           ),        ],
       ),
-      bottomNavigationBar: const AdminNavBar(
-        selectedIndex: 0,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: const AdminNavBar(
+          selectedIndex: 0,
+        ),
       ),
     );
   }
