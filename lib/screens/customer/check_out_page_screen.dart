@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:j_app/widgets/customers_bottom_nav_bar.dart';
 import 'package:j_app/services/checkout_storage_service.dart';
 import 'order_confirmation_page.dart';
+import 'package:j_app/services/payment_service.dart';
 
 class CheckOutPage extends StatefulWidget {
   const CheckOutPage({super.key});
@@ -24,15 +25,14 @@ class _CheckOutPageState extends State<CheckOutPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController cardNumberController =
-  TextEditingController();
-  final TextEditingController cardHolderController =
-  TextEditingController();
+  final TextEditingController cardNumberController = TextEditingController();
+  final TextEditingController cardHolderController = TextEditingController();
   final TextEditingController expiryController = TextEditingController();
   final TextEditingController cvvController = TextEditingController();
 
   String selectedPayment = "Cash on Delivery";
   bool hidden = true;
+  bool _isProcessingPayment = false;
 
   double deliveryFee = 0.0;
 
@@ -139,19 +139,9 @@ class _CheckOutPageState extends State<CheckOutPage> {
       phoneController.text = saved['phone'] ?? '';
       addressController.text = saved['address'] ?? '';
 
-      selectedPayment =
-          saved['paymentMethod'] ?? "Cash on Delivery";
+      selectedPayment = saved['paymentMethod'] ?? "Cash on Delivery";
 
-      cardNumberController.text =
-          saved['cardNumber'] ?? '';
 
-      cardHolderController.text =
-          saved['cardHolder'] ?? '';
-
-      expiryController.text =
-          saved['expiry'] ?? '';
-
-      cvvController.clear();
     });
   }
 
@@ -164,19 +154,6 @@ class _CheckOutPageState extends State<CheckOutPage> {
       items = cart;
       loadingCart = false;
     });
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    phoneController.dispose();
-    addressController.dispose();
-    cardNumberController.dispose();
-    cardHolderController.dispose();
-    expiryController.dispose();
-    cvvController.dispose();
-
-    super.dispose();
   }
 
   double calculateSubtotal() {
@@ -195,7 +172,39 @@ class _CheckOutPageState extends State<CheckOutPage> {
     return calculateSubtotal() + deliveryFee;
   }
 
+  bool validateCardFields() {
+    final cardNumber = cardNumberController.text.replaceAll(' ', '').trim();
+    final cardHolder = cardHolderController.text.trim();
+    final expiry = expiryController.text.trim();
+    final cvv = cvvController.text.trim();
+
+    if (cardNumber.isEmpty || cardHolder.isEmpty || expiry.isEmpty || cvv.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Fill all card details",
+      );
+      return false;
+    }
+
+    if (cardNumber.length < 13 || cardNumber.length > 19) {
+      Fluttertoast.showToast(
+        msg: "Enter a valid card number",
+      );
+      return false;
+    }
+
+    if (cvv.length < 3 || cvv.length > 4) {
+      Fluttertoast.showToast(
+        msg: "Enter a valid CVV",
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> placeOrder() async {
+    if (_isProcessingPayment) return;
+
     if (nameController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
         addressController.text.trim().isEmpty) {
@@ -206,13 +215,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
     }
 
     if (selectedPayment == "Card") {
-      if (cardNumberController.text.trim().isEmpty ||
-          cardHolderController.text.trim().isEmpty ||
-          expiryController.text.trim().isEmpty ||
-          cvvController.text.trim().isEmpty) {
-        Fluttertoast.showToast(
-          msg: "Fill all card details",
-        );
+      if (!validateCardFields()) {
         return;
       }
     }
@@ -234,26 +237,74 @@ class _CheckOutPageState extends State<CheckOutPage> {
         phone: phoneController.text.trim(),
         address: addressController.text.trim(),
         paymentMethod: selectedPayment,
-        cardNumber: selectedPayment == "Card"
-            ? cardNumberController.text.trim()
-            : null,
-        cardHolder: selectedPayment == "Card"
-            ? cardHolderController.text.trim()
-            : null,
-        expiry: selectedPayment == "Card"
-            ? expiryController.text.trim()
-            : null,
       );
     }
 
     final subtotal = calculateSubtotal();
     final total = calculateTotal();
-    final orderDate = DateTime.now().toIso8601String();
 
     try {
+      setState(() {
+        _isProcessingPayment = true;
+      });
+//card
+      if (selectedPayment == "Card") {
+        final orderId = FirebaseDatabase.instance
+            .ref("orders/${user.uid}")
+            .push()
+            .key!;
+
+        final amountInCents = (total * 100).round();
+
+        final paymentResult =
+        await PaymentService.createPaymentIntent(
+          amount: amountInCents,
+          userId: user.uid,
+          orderId: orderId,
+          email: user.email ?? "",
+          name: nameController.text.trim(),
+          accountNumber: cardNumberController.text
+              .replaceAll(" ", "")
+              .trim(),
+          exp: expiryController.text.trim().length == 4
+              ? "${expiryController.text.trim().substring(0, 2)}/${expiryController.text.trim().substring(2, 4)}"
+              : expiryController.text.trim(),
+          cvv: cvvController.text.trim(),
+        );
+
+        if (paymentResult == null) {
+          Fluttertoast.showToast(
+            msg: "Payment failed",
+          );
+          return;
+        }
+
+        final status = paymentResult["status"];
+        final paymentIntentId = paymentResult["paymentIntentId"];
+        final customerId = paymentResult["customerId"];
+
+        print("Payment Intent: $paymentIntentId");
+        print("Customer: $customerId");
+        print("Payment Status: $status");
+
+        if (status == "succeeded") {
+          Fluttertoast.showToast(
+            msg: "Payment successful",
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: "Payment status: $status",
+          );
+        }
+
+        return;
+      }
+//cod
       final orderRef = FirebaseDatabase.instance
           .ref("orders/${user.uid}")
           .push();
+
+      final orderDate = DateTime.now().toIso8601String();
 
       await orderRef.set({
         "orderDate": orderDate,
@@ -263,6 +314,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
           "address": addressController.text.trim(),
         },
         "paymentMethod": selectedPayment,
+        "paymentStatus": "Pending",
         "subtotal": subtotal,
         "deliveryFee": deliveryFee,
         "totalPrice": total,
@@ -308,7 +360,26 @@ class _CheckOutPageState extends State<CheckOutPage> {
       );
 
       print("Order error: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingPayment = false;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+    cardNumberController.dispose();
+    cardHolderController.dispose();
+    expiryController.dispose();
+    cvvController.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -447,10 +518,14 @@ class _CheckOutPageState extends State<CheckOutPage> {
                     child: TextField(
                       controller: expiryController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(4),
+                      ],
                       cursorColor: brown,
                       decoration: _inputDecoration(
                         label: "Expiry Date",
-                        hint: "MM/YY",
+                        hint: "MMYY",
                       ),
                     ),
                   ),

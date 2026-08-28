@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:j_app/widgets/customers_bottom_nav_bar.dart';
+import 'package:j_app/data/cart_data.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -12,6 +14,46 @@ class OrderHistoryPage extends StatefulWidget {
 
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
   static const Color brown = Color(0xFFC67C4E);
+
+  Future<void> _addSelectedItemsToCart(
+      List<Map<String, dynamic>> selectedItems,
+      ) async {
+    for (final item in selectedItems) {
+      final productId =
+          item["productId"]?.toString() ??
+              item["id"]?.toString() ??
+              "";
+
+      if (productId.isEmpty) continue;
+
+      final coffee = {
+        "id": productId,
+        "name": item["name"] ?? "",
+        "description": item["description"] ?? "",
+        "detailedDescription":
+        item["detailedDescription"] ??
+            item["description"] ??
+            "",
+        "image": item["image"] ?? "",
+        "price": item["price"] ?? 0,
+      };
+
+      await addToCart(coffee, productId);
+
+      final originalQuantity =
+          (item["quantity"] as num?)?.toInt() ?? 1;
+
+      for (int i = 1; i < originalQuantity; i++) {
+        await increaseQuantity(productId);
+      }
+    }
+
+    if (!mounted) return;
+
+    Fluttertoast.showToast(
+      msg: "Selected items added to cart",
+    );
+  }
 
   Future<List<Map<String, dynamic>>> getOrders() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -54,6 +96,94 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
     return orders;
   }
+
+  Future<void> _showReorderDialog(
+      List<Map<String, dynamic>> items,
+      ) async {
+    final Set<int> selectedItems = {};
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text(
+                "Reorder Items",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+
+                    return CheckboxListTile(
+                      activeColor: brown,
+                      value: selectedItems.contains(index),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            selectedItems.add(index);
+                          } else {
+                            selectedItems.remove(index);
+                          }
+                        });
+                      },
+                      title: Text(
+                        item["name"]?.toString() ?? "",
+                      ),
+                      subtitle: Text(
+                        "${item["quantity"] ?? 1} × \$${item["price"] ?? 0}",
+                      ),
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: brown,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: selectedItems.isEmpty
+                      ? null
+                      : () async {
+                    final selected = selectedItems
+                        .map((index) => items[index])
+                        .toList();
+
+                    Navigator.pop(context);
+
+                    await _addSelectedItemsToCart(
+                      selected,
+                    );
+                  },
+                  child: const Text("Add to Cart"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -235,32 +365,47 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       ),
 
                       Row(
-                        mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
-
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Total",
-                            style:
-                            TextStyle(
-                              fontWeight:
-                              FontWeight.bold,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Total",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "\$${total.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
 
-                          Text(
-                            "\$${total.toStringAsFixed(2)}",
-                            style:
-                            const TextStyle(
-                              fontSize: 18,
-                              fontWeight:
-                              FontWeight.bold,
+                          ElevatedButton(
+                            onPressed: () {
+                              _showReorderDialog(items);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: brown,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Reorder",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
-
 
                     ],
                   ),
