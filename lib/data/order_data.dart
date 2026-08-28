@@ -1,12 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-final DatabaseReference ordersRef =
-FirebaseDatabase.instance.ref("orders");
+final DatabaseReference ordersRef = FirebaseDatabase.instance.ref("orders");
 
-String get currentUserId {
-  return FirebaseAuth.instance.currentUser!.uid;
-}
+String get currentUserId {return FirebaseAuth.instance.currentUser!.uid;}
 
 
 Future<void> saveOrder({

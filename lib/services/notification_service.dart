@@ -26,19 +26,16 @@ class NotificationService {
       FirebaseMessaging.instance;
 
   static Future<void> initialize() async {
-    // Register background handler
     FirebaseMessaging.onBackgroundMessage(
       firebaseMessagingBackgroundHandler,
     );
 
-    // Ask notification permission
     await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // Get FCM token
     final token = await _messaging.getToken();
 
     print('FCM TOKEN: $token');
@@ -47,12 +44,10 @@ class NotificationService {
       await saveToken(token);
     }
 
-    // Token refresh
     _messaging.onTokenRefresh.listen((newToken) {
       saveToken(newToken);
     });
 
-    // Foreground notification
     FirebaseMessaging.onMessage.listen(
           (RemoteMessage message) {
         print('Foreground notification received');
@@ -71,7 +66,6 @@ class NotificationService {
       },
     );
 
-    // Notification tapped while app is in background
     FirebaseMessaging.onMessageOpenedApp.listen(
           (RemoteMessage message) {
         print('Notification tapped from background');
@@ -92,7 +86,6 @@ class NotificationService {
       },
     );
 
-    // Notification tapped while app was completely closed
     final initialMessage =
     await _messaging.getInitialMessage();
 
@@ -111,7 +104,6 @@ class NotificationService {
         'Data: ${initialMessage.data}',
       );
 
-      // Wait until MaterialApp and Navigator are ready
       WidgetsBinding.instance.addPostFrameCallback((_) {
         handleNotificationTap(initialMessage);
       });

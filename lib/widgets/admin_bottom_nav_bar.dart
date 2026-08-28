@@ -34,6 +34,13 @@ class AdminNavBar extends StatelessWidget {
           '/order_manage',
         );
         break;
+
+      case 3:
+        Navigator.pushNamed(
+          context,
+          '/slider_management',
+        );
+        break;
     }
   }
 
@@ -71,6 +78,11 @@ class AdminNavBar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.receipt_long),
           label: "Orders",
+        ),
+
+        BottomNavigationBarItem(
+          icon: Icon(Icons.view_carousel),
+          label: "Slider",
         ),
 
       ],

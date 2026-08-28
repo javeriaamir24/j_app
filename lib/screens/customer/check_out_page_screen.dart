@@ -47,328 +47,6 @@ class _CheckOutPageState extends State<CheckOutPage> {
     loadDeliveryFee();
   }
 
-  Future<void> loadDeliveryFee() async {
-    try {
-      final snapshot = await FirebaseDatabase.instance
-          .ref("settings/deliveryFee")
-          .get();
-
-      if (!mounted) return;
-
-      if (snapshot.exists) {
-        setState(() {
-          deliveryFee =
-              double.tryParse(snapshot.value.toString()) ?? 0.0;
-          loadingDeliveryFee = false;
-        });
-      } else {
-        setState(() {
-          deliveryFee = 0.0;
-          loadingDeliveryFee = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        deliveryFee = 0.0;
-        loadingDeliveryFee = false;
-      });
-
-      print("Delivery fee error: $e");
-    }
-  }
-
-  Future<bool> askToSaveDetails() async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Save checkout details?',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: const Text(
-            'Would you like to save your checkout details for your next order?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-              child: const Text(
-                'No',
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: brown,
-              ),
-              child: const Text(
-                'Yes',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
-  }
-
-  Future<void> loadSavedCheckoutDetails() async {
-    final saved =
-    await CheckoutStorageService.loadCheckoutDetails();
-
-    if (!mounted) return;
-
-    setState(() {
-      nameController.text = saved['name'] ?? '';
-      phoneController.text = saved['phone'] ?? '';
-      addressController.text = saved['address'] ?? '';
-
-      selectedPayment = saved['paymentMethod'] ?? "Cash on Delivery";
-
-
-    });
-  }
-
-  Future<void> loadCart() async {
-    final cart = await getCartItems();
-
-    if (!mounted) return;
-
-    setState(() {
-      items = cart;
-      loadingCart = false;
-    });
-  }
-
-  double calculateSubtotal() {
-    double subtotal = 0;
-
-    for (var item in items) {
-      subtotal +=
-          (item["price"] as num).toDouble() *
-              (item["quantity"] as num).toInt();
-    }
-
-    return subtotal;
-  }
-
-  double calculateTotal() {
-    return calculateSubtotal() + deliveryFee;
-  }
-
-  bool validateCardFields() {
-    final cardNumber = cardNumberController.text.replaceAll(' ', '').trim();
-    final cardHolder = cardHolderController.text.trim();
-    final expiry = expiryController.text.trim();
-    final cvv = cvvController.text.trim();
-
-    if (cardNumber.isEmpty || cardHolder.isEmpty || expiry.isEmpty || cvv.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Fill all card details",
-      );
-      return false;
-    }
-
-    if (cardNumber.length < 13 || cardNumber.length > 19) {
-      Fluttertoast.showToast(
-        msg: "Enter a valid card number",
-      );
-      return false;
-    }
-
-    if (cvv.length < 3 || cvv.length > 4) {
-      Fluttertoast.showToast(
-        msg: "Enter a valid CVV",
-      );
-      return false;
-    }
-
-    return true;
-  }
-
-  Future<void> placeOrder() async {
-    if (_isProcessingPayment) return;
-
-    if (nameController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty ||
-        addressController.text.trim().isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Fill all delivery fields",
-      );
-      return;
-    }
-
-    if (selectedPayment == "Card") {
-      if (!validateCardFields()) {
-        return;
-      }
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      Fluttertoast.showToast(
-        msg: "Please login first",
-      );
-      return;
-    }
-
-    final shouldSave = await askToSaveDetails();
-
-    if (shouldSave) {
-      await CheckoutStorageService.saveCheckoutDetails(
-        name: nameController.text.trim(),
-        phone: phoneController.text.trim(),
-        address: addressController.text.trim(),
-        paymentMethod: selectedPayment,
-      );
-    }
-
-    final subtotal = calculateSubtotal();
-    final total = calculateTotal();
-
-    try {
-      setState(() {
-        _isProcessingPayment = true;
-      });
-//card
-      if (selectedPayment == "Card") {
-        final orderId = FirebaseDatabase.instance
-            .ref("orders/${user.uid}")
-            .push()
-            .key!;
-
-        final amountInCents = (total * 100).round();
-
-        final paymentResult =
-        await PaymentService.createPaymentIntent(
-          amount: amountInCents,
-          userId: user.uid,
-          orderId: orderId,
-          email: user.email ?? "",
-          name: nameController.text.trim(),
-          accountNumber: cardNumberController.text
-              .replaceAll(" ", "")
-              .trim(),
-          exp: expiryController.text.trim().length == 4
-              ? "${expiryController.text.trim().substring(0, 2)}/${expiryController.text.trim().substring(2, 4)}"
-              : expiryController.text.trim(),
-          cvv: cvvController.text.trim(),
-        );
-
-        if (paymentResult == null) {
-          Fluttertoast.showToast(
-            msg: "Payment failed",
-          );
-          return;
-        }
-
-        final status = paymentResult["status"];
-        final paymentIntentId = paymentResult["paymentIntentId"];
-        final customerId = paymentResult["customerId"];
-
-        print("Payment Intent: $paymentIntentId");
-        print("Customer: $customerId");
-        print("Payment Status: $status");
-
-        if (status == "succeeded") {
-          Fluttertoast.showToast(
-            msg: "Payment successful",
-          );
-        } else {
-          Fluttertoast.showToast(
-            msg: "Payment status: $status",
-          );
-        }
-
-        return;
-      }
-//cod
-      final orderRef = FirebaseDatabase.instance
-          .ref("orders/${user.uid}")
-          .push();
-
-      final orderDate = DateTime.now().toIso8601String();
-
-      await orderRef.set({
-        "orderDate": orderDate,
-        "customer": {
-          "name": nameController.text.trim(),
-          "phone": phoneController.text.trim(),
-          "address": addressController.text.trim(),
-        },
-        "paymentMethod": selectedPayment,
-        "paymentStatus": "Pending",
-        "subtotal": subtotal,
-        "deliveryFee": deliveryFee,
-        "totalPrice": total,
-        "status": "Pending",
-        "items": items.map((item) {
-          return {
-            "id": item["id"],
-            "name": item["name"],
-            "description": item["description"],
-            "price": item["price"],
-            "image": item["image"],
-            "quantity": item["quantity"],
-          };
-        }).toList(),
-      });
-
-      await clearCart();
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OrderConfirmationPage(
-            orderId: orderRef.key ?? "",
-            orderDate: orderDate,
-            customer: {
-              "name": nameController.text.trim(),
-              "phone": phoneController.text.trim(),
-              "address": addressController.text.trim(),
-            },
-            paymentMethod: selectedPayment,
-            items: List<Map<String, dynamic>>.from(items),
-            subtotal: subtotal,
-            deliveryFee: deliveryFee,
-            total: total,
-          ),
-        ),
-      );
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Failed to place order",
-      );
-
-      print("Order error: $e");
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessingPayment = false;
-        });
-      }
-    }
-  }
-
   @override
   void dispose() {
     nameController.dispose();
@@ -497,6 +175,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
                 controller: cardNumberController,
                 keyboardType: TextInputType.number,
                 cursorColor: brown,
+                maxLength: 16,
                 decoration: _inputDecoration(
                   label: "Card Number",
                   hint: "1234 5678 9012 3456",
@@ -689,6 +368,298 @@ class _CheckOutPageState extends State<CheckOutPage> {
       ),
 
     );
+  }
+
+
+
+  Future<void> loadDeliveryFee() async {
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref("settings/deliveryFee")
+          .get();
+
+      if (!mounted) return;
+
+      if (snapshot.exists) {
+        setState(() {
+          deliveryFee =
+              double.tryParse(snapshot.value.toString()) ?? 0.0;
+          loadingDeliveryFee = false;
+        });
+      } else {
+        setState(() {
+          deliveryFee = 0.0;
+          loadingDeliveryFee = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        deliveryFee = 0.0;
+        loadingDeliveryFee = false;
+      });
+
+      print("Delivery fee error: $e");
+    }
+  }
+
+  Future<bool> askToSaveDetails() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Save checkout details?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'Would you like to save your checkout details for your next order?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text(
+                'No',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: brown,
+              ),
+              child: const Text(
+                'Yes',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  Future<void> loadSavedCheckoutDetails() async {
+    final saved =
+    await CheckoutStorageService.loadCheckoutDetails();
+
+    if (!mounted) return;
+
+    setState(() {
+      nameController.text = saved['name'] ?? '';
+      phoneController.text = saved['phone'] ?? '';
+      addressController.text = saved['address'] ?? '';
+
+      selectedPayment = saved['paymentMethod'] ?? "Cash on Delivery";
+
+
+    });
+  }
+
+  Future<void> loadCart() async {
+    final cart = await getCartItems();
+
+    if (!mounted) return;
+
+    setState(() {
+      items = cart;
+      loadingCart = false;
+    });
+  }
+
+  double calculateSubtotal() {
+    double subtotal = 0;
+
+    for (var item in items) {
+      subtotal +=
+          (item["price"] as num).toDouble() *
+              (item["quantity"] as num).toInt();
+    }
+
+    return subtotal;
+  }
+
+  double calculateTotal() {
+    return calculateSubtotal() + deliveryFee;
+  }
+
+  bool validateCardFields() {
+    final cardNumber = cardNumberController.text.replaceAll(' ', '').trim();
+    final cardHolder = cardHolderController.text.trim();
+    final expiry = expiryController.text.trim();
+    final cvv = cvvController.text.trim();
+
+    if (cardNumber.isEmpty || cardHolder.isEmpty || expiry.isEmpty || cvv.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Fill all card details",
+      );
+      return false;
+    }
+
+    if (cardNumber.length < 13 || cardNumber.length > 19) {
+      Fluttertoast.showToast(
+        msg: "Enter a valid card number",
+      );
+      return false;
+    }
+
+    if (cvv.length < 3 || cvv.length > 4) {
+      Fluttertoast.showToast(
+        msg: "Enter a valid CVV",
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> placeOrder() async {
+    if (_isProcessingPayment) return;
+
+    if (nameController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty) {
+      Fluttertoast.showToast(msg: "Fill all delivery fields");
+      return;
+    }
+
+    if (selectedPayment == "Card" && !validateCardFields()) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      Fluttertoast.showToast(msg: "Please login first");
+      return;
+    }
+
+    final shouldSave = await askToSaveDetails();
+    if (shouldSave) {
+      await CheckoutStorageService.saveCheckoutDetails(
+        name: nameController.text.trim(),
+        phone: phoneController.text.trim(),
+        address: addressController.text.trim(),
+        paymentMethod: selectedPayment,
+      );
+    }
+
+    final subtotal = calculateSubtotal();
+    final total = calculateTotal();
+
+    try {
+      setState(() => _isProcessingPayment = true);
+
+      Map<String, dynamic>? paymentDetails;
+      String paymentStatus = "Pending";
+
+      if (selectedPayment == "Card") {
+        final tentativeId =
+        FirebaseDatabase.instance.ref("orders/${user.uid}").push().key!;
+        final amountInCents = (total * 100).round();
+
+        final paymentResult = await PaymentService.createPaymentIntent(
+          amount: amountInCents,
+          userId: user.uid,
+          orderId: tentativeId,
+          email: user.email ?? "",
+          name: nameController.text.trim(),
+          accountNumber: cardNumberController.text.replaceAll(" ", "").trim(),
+          exp: expiryController.text.trim().length == 4
+              ? "${expiryController.text.trim().substring(0, 2)}/${expiryController.text.trim().substring(2, 4)}"
+              : expiryController.text.trim(),
+          cvv: cvvController.text.trim(),
+        );
+
+        if (paymentResult == null) {
+          Fluttertoast.showToast(msg: "Payment failed");
+          return;
+        }
+
+        final status = paymentResult["status"];
+        if (status != "succeeded") {
+          Fluttertoast.showToast(msg: "Payment status: $status");
+          return;
+        }
+
+        paymentStatus = "Paid";
+        paymentDetails = {
+          "paymentIntentId": paymentResult["paymentIntentId"],
+          "stripeCustomerId": paymentResult["customerId"],
+        };
+      }
+
+      final orderRef = FirebaseDatabase.instance.ref("orders/${user.uid}").push();
+      final orderDate = DateTime.now().toIso8601String();
+
+      final orderData = <String, dynamic>{
+        "orderDate": orderDate,
+        "customer": {
+          "name": nameController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "address": addressController.text.trim(),
+          "email": user.email ?? "",
+        },
+        "paymentMethod": selectedPayment,
+        "paymentStatus": paymentStatus,
+        "subtotal": subtotal,
+        "deliveryFee": deliveryFee,
+        "totalPrice": total,
+        "status": "Pending",
+        "items": items.map((item) => {
+          "id": item["id"],
+          "name": item["name"],
+          "description": item["description"],
+          "price": item["price"],
+          "image": item["image"],
+          "quantity": item["quantity"],
+        }).toList(),
+        if (paymentDetails != null) "payment": paymentDetails,
+      };
+
+      await orderRef.set(orderData);
+      await clearCart();
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderConfirmationPage(
+            orderId: orderRef.key ?? "",
+            orderDate: orderDate,
+            customer: {
+              "name": nameController.text.trim(),
+              "phone": phoneController.text.trim(),
+              "address": addressController.text.trim(),
+            },
+            paymentMethod: selectedPayment,
+            items: List<Map<String, dynamic>>.from(items),
+            subtotal: subtotal,
+            deliveryFee: deliveryFee,
+            total: total,
+          ),
+        ),
+      );
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Failed to place order");
+      print("Order error: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
+    }
   }
 
   InputDecoration _inputDecoration({

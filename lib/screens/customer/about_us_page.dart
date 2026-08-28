@@ -107,6 +107,7 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
+
   static Widget _sectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(

@@ -21,16 +21,6 @@ class _ProductsPageState extends State<ProductsPage> {
     _loadProducts();
   }
 
-  void _loadProducts() {
-    _productsFuture = getProducts();
-  }
-
-  void _refreshProducts() {
-    setState(() {
-      _loadProducts();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -319,4 +309,17 @@ class _ProductsPageState extends State<ProductsPage> {
       ),
     );
   }
+
+
+//functions
+  void _loadProducts() {
+    _productsFuture = getProducts();
+  }
+
+  void _refreshProducts() {
+    setState(() {
+      _loadProducts();
+    });
+  }
+
 }

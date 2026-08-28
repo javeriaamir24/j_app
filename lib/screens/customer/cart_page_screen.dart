@@ -24,35 +24,7 @@ class _CartPageState extends State<CartPage> {
     loadDeliveryFee();
   }
 
-  Future<void> loadDeliveryFee() async {
-    try {
-      final snapshot = await FirebaseDatabase.instance
-          .ref("settings/deliveryFee")
-          .get();
 
-      if (!mounted) return;
-
-      setState(() {
-        if (snapshot.exists) {
-          deliveryFee =
-              double.tryParse(snapshot.value.toString()) ?? 0.0;
-        } else {
-          deliveryFee = 0.0;
-        }
-
-        loadingDeliveryFee = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        deliveryFee = 0.0;
-        loadingDeliveryFee = false;
-      });
-
-      print("Delivery fee error: $e");
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -466,5 +438,35 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     );
+  }
+
+  Future<void> loadDeliveryFee() async {
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref("settings/deliveryFee")
+          .get();
+
+      if (!mounted) return;
+
+      setState(() {
+        if (snapshot.exists) {
+          deliveryFee =
+              double.tryParse(snapshot.value.toString()) ?? 0.0;
+        } else {
+          deliveryFee = 0.0;
+        }
+
+        loadingDeliveryFee = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        deliveryFee = 0.0;
+        loadingDeliveryFee = false;
+      });
+
+      print("Delivery fee error: $e");
+    }
   }
 }

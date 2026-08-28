@@ -24,9 +24,7 @@ class ProductService {
     }).toList();
   }
 
-  // =========================
-  // ADD PRODUCT
-  // =========================
+
 
   Future<void> addProduct({
     required String name,
@@ -46,16 +44,12 @@ class ProductService {
       'description': description,
       'detailedDescription': detailedDescription,
 
-      // Cloudinary image URL
       'image': imageUrl,
 
       'popular': popular,
     });
   }
 
-  // =========================
-  // UPDATE PRODUCT
-  // =========================
 
   Future<void> updateProduct({
     required String id,
@@ -76,17 +70,12 @@ class ProductService {
       'popular': popular,
     };
 
-    // Only change image if a new image was selected
     if (imageUrl != null && imageUrl.isNotEmpty) {
       updates['image'] = imageUrl;
     }
 
     await _coffeesRef.child(id).update(updates);
   }
-
-  // =========================
-  // DELETE PRODUCT
-  // =========================
 
   Future<void> deleteProduct(String id) async {
     await _coffeesRef.child(id).remove();

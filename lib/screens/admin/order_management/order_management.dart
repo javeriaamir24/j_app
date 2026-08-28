@@ -16,54 +16,11 @@ class _OrderManagementState extends State<OrderManagement> {
 
   late Future<List<OrderModel>> _ordersFuture;
 
-  String _formatDate(String date) {
-    try {
-      final parsed = DateTime.parse(date).toLocal();
-
-      final day =
-      parsed.day.toString().padLeft(2, '0');
-
-      final month =
-      parsed.month.toString().padLeft(2, '0');
-
-      final year =
-      parsed.year.toString();
-
-      int hour = parsed.hour;
-
-      final minute =
-      parsed.minute.toString().padLeft(2, '0');
-
-      final period =
-      hour >= 12 ? "PM" : "AM";
-
-      if (hour == 0) {
-        hour = 12;
-      } else if (hour > 12) {
-        hour -= 12;
-      }
-
-      return "$day/$month/$year  $hour:$minute $period";
-    } catch (e) {
-      return date;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
 
     _loadOrders();
-  }
-
-  void _loadOrders() {
-    _ordersFuture = getOrders();
-  }
-
-  void _refreshOrders() {
-    setState(() {
-      _loadOrders();
-    });
   }
 
   @override
@@ -302,4 +259,50 @@ class _OrderManagementState extends State<OrderManagement> {
       ),
     );
   }
+
+
+  //functions
+  String _formatDate(String date) {
+    try {
+      final parsed = DateTime.parse(date).toLocal();
+
+      final day =
+      parsed.day.toString().padLeft(2, '0');
+
+      final month =
+      parsed.month.toString().padLeft(2, '0');
+
+      final year =
+      parsed.year.toString();
+
+      int hour = parsed.hour;
+
+      final minute =
+      parsed.minute.toString().padLeft(2, '0');
+
+      final period =
+      hour >= 12 ? "PM" : "AM";
+
+      if (hour == 0) {
+        hour = 12;
+      } else if (hour > 12) {
+        hour -= 12;
+      }
+
+      return "$day/$month/$year  $hour:$minute $period";
+    } catch (e) {
+      return date;
+    }
+  }
+
+  void _loadOrders() {
+    _ordersFuture = getOrders();
+  }
+
+  void _refreshOrders() {
+    setState(() {
+      _loadOrders();
+    });
+  }
+
 }

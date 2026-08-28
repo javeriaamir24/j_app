@@ -460,6 +460,9 @@ class _UsersPageState extends State<UsersPage> {
       ),
     );
   }
+
+  //functions
+
   Future<void> signout() async {
 
     final bool? remember = await showDialog<bool>(

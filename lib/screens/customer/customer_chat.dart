@@ -44,197 +44,6 @@ class _CustomerChatState extends State<CustomerChat> {
     super.dispose();
   }
 
-  void markMessagesAsRead(List<MapEntry> messages) {
-
-    for (final entry in messages) {
-
-      final message = Map<dynamic, dynamic>.from(entry.value);
-
-      final isFromAdmin = message["senderType"] == "admin";
-
-      final alreadyRead = message["isRead"] == true;
-
-      if (isFromAdmin && !alreadyRead) {
-        messagesRef.child(entry.key.toString()).update({
-          "isRead": true,
-        });
-      }
-    }
-  }
-  void scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(
-          _scrollController.position.maxScrollExtent,
-        );
-      }
-    });
-  }
-
-  Future<void> findAdmin() async {
-    final snapshot = await FirebaseDatabase.instance.ref("users").get();
-
-    if (!snapshot.exists) {
-      setState(() {
-        loadingAdmin = false;
-      });
-
-      return;
-    }
-
-    final rawData = snapshot.value;
-
-    if (rawData is! Map) {
-      setState(() {
-        loadingAdmin = false;
-      });
-
-      return;
-    }
-
-    final data = Map<dynamic, dynamic>.from(rawData);
-
-    for (final entry in data.entries) {
-      final user = Map<dynamic, dynamic>.from(
-        entry.value,
-      );
-
-      if (user["role"] == "admin") {
-        setState(() {
-          adminId = entry.key.toString();
-          adminName = user["name"]?.toString() ?? "Customer Support";
-          loadingAdmin = false;
-        });
-
-        return;
-      }
-    }
-
-    setState(() {
-      loadingAdmin = false;
-    });
-  }
-
-  Future<void> sendMessage() async {
-    final message = messageController.text.trim();
-
-    if (message.isEmpty) {
-      return;
-    }
-
-    final customer = auth.currentUser;
-
-    if (customer == null) {
-      return;
-    }
-
-    if (adminId == null) {
-      return;
-    }
-
-    final messageRef = messagesRef.push();
-
-    await messageRef.set({
-      "senderId": customer.uid,
-      "senderType": "customer",
-      "receiverId": adminId,
-      "message": message,
-      "timestamp": ServerValue.timestamp,
-      "isRead": false,
-    });
-
-    messageController.clear();
-
-    await NotificationSender.sendNotification(
-      receiverId: adminId!,
-      senderName: customer.displayName ?? "Customer",
-      message: message,
-      type: "chat_customer",
-      senderId: customer.uid,
-    );
-  }
-
-
-  String formatTime(dynamic timestamp) {
-    if (timestamp == null) {
-      return "";
-    }
-
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-      int.parse(timestamp.toString()),
-    );
-
-    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour == 0 ? 12 : dateTime.hour;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = dateTime.hour >= 12 ? "PM" : "AM";
-
-    return "$hour:$minute $period";
-  }
-  String formatDate(dynamic timestamp) {
-
-    if (timestamp == null) {
-      return "";
-    }
-
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-      int.parse(timestamp.toString()),
-    );
-
-    final now = DateTime.now();
-
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
-
-    if (messageDate == today) {
-      return "Today";
-    }
-
-    if (messageDate == yesterday) {
-      return "Yesterday";
-    }
-
-    const weekdays = [
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
-    ];
-
-    const months = [
-      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
-    ];
-
-    final weekday = weekdays[dateTime.weekday - 1];
-    final month = months[dateTime.month - 1];
-
-    return "$weekday, ${dateTime.day} $month ${dateTime.year}";
-  }
-
-  bool isNewDay(List<MapEntry> messages, int index) {
-
-    if (index == 0) {
-      return true;
-    }
-
-    final currentMessage =
-    Map<dynamic, dynamic>.from(messages[index].value);
-
-    final previousMessage =
-    Map<dynamic, dynamic>.from(messages[index - 1].value);
-
-    final currentTime = int.parse(
-      (currentMessage["timestamp"] ?? 0).toString(),
-    );
-
-    final previousTime = int.parse(
-      (previousMessage["timestamp"] ?? 0).toString(),
-    );
-
-    final currentDate = DateTime.fromMillisecondsSinceEpoch(currentTime);
-
-    final previousDate = DateTime.fromMillisecondsSinceEpoch(previousTime);
-
-    return currentDate.year != previousDate.year || currentDate.month != previousDate.month || currentDate.day != previousDate.day;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -589,4 +398,199 @@ class _CustomerChatState extends State<CustomerChat> {
       ),
     );
   }
+
+
+  void markMessagesAsRead(List<MapEntry> messages) {
+
+    for (final entry in messages) {
+
+      final message = Map<dynamic, dynamic>.from(entry.value);
+
+      final isFromAdmin = message["senderType"] == "admin";
+
+      final alreadyRead = message["isRead"] == true;
+
+      if (isFromAdmin && !alreadyRead) {
+        messagesRef.child(entry.key.toString()).update({
+          "isRead": true,
+        });
+      }
+    }
+  }
+
+  void scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(
+          _scrollController.position.maxScrollExtent,
+        );
+      }
+    });
+  }
+
+  Future<void> findAdmin() async {
+    final snapshot = await FirebaseDatabase.instance.ref("users").get();
+
+    if (!snapshot.exists) {
+      setState(() {
+        loadingAdmin = false;
+      });
+
+      return;
+    }
+
+    final rawData = snapshot.value;
+
+    if (rawData is! Map) {
+      setState(() {
+        loadingAdmin = false;
+      });
+
+      return;
+    }
+
+    final data = Map<dynamic, dynamic>.from(rawData);
+
+    for (final entry in data.entries) {
+      final user = Map<dynamic, dynamic>.from(
+        entry.value,
+      );
+
+      if (user["role"] == "admin") {
+        setState(() {
+          adminId = entry.key.toString();
+          adminName = user["name"]?.toString() ?? "Customer Support";
+          loadingAdmin = false;
+        });
+
+        return;
+      }
+    }
+
+    setState(() {
+      loadingAdmin = false;
+    });
+  }
+
+  Future<void> sendMessage() async {
+    final message = messageController.text.trim();
+
+    if (message.isEmpty) {
+      return;
+    }
+
+    final customer = auth.currentUser;
+
+    if (customer == null) {
+      return;
+    }
+
+    if (adminId == null) {
+      return;
+    }
+
+    final messageRef = messagesRef.push();
+
+    await messageRef.set({
+      "senderId": customer.uid,
+      "senderType": "customer",
+      "receiverId": adminId,
+      "message": message,
+      "timestamp": ServerValue.timestamp,
+      "isRead": false,
+    });
+
+    messageController.clear();
+
+    await NotificationSender.sendNotification(
+      receiverId: adminId!,
+      senderName: customer.displayName ?? "Customer",
+      message: message,
+      type: "chat_customer",
+      senderId: customer.uid,
+    );
+  }
+
+
+  String formatTime(dynamic timestamp) {
+    if (timestamp == null) {
+      return "";
+    }
+
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(timestamp.toString()),
+    );
+
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour == 0 ? 12 : dateTime.hour;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? "PM" : "AM";
+
+    return "$hour:$minute $period";
+  }
+
+  String formatDate(dynamic timestamp) {
+
+    if (timestamp == null) {
+      return "";
+    }
+
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(timestamp.toString()),
+    );
+
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (messageDate == today) {
+      return "Today";
+    }
+
+    if (messageDate == yesterday) {
+      return "Yesterday";
+    }
+
+    const weekdays = [
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    ];
+
+    const months = [
+      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
+    ];
+
+    final weekday = weekdays[dateTime.weekday - 1];
+    final month = months[dateTime.month - 1];
+
+    return "$weekday, ${dateTime.day} $month ${dateTime.year}";
+  }
+
+  bool isNewDay(List<MapEntry> messages, int index) {
+
+    if (index == 0) {
+      return true;
+    }
+
+    final currentMessage =
+    Map<dynamic, dynamic>.from(messages[index].value);
+
+    final previousMessage =
+    Map<dynamic, dynamic>.from(messages[index - 1].value);
+
+    final currentTime = int.parse(
+      (currentMessage["timestamp"] ?? 0).toString(),
+    );
+
+    final previousTime = int.parse(
+      (previousMessage["timestamp"] ?? 0).toString(),
+    );
+
+    final currentDate = DateTime.fromMillisecondsSinceEpoch(currentTime);
+
+    final previousDate = DateTime.fromMillisecondsSinceEpoch(previousTime);
+
+    return currentDate.year != previousDate.year || currentDate.month != previousDate.month || currentDate.day != previousDate.day;
+  }
+
 }

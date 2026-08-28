@@ -40,16 +40,12 @@ class OrderModel {
 
 
     if (customerData is Map) {
-      customerName =
-          customerData['name']?.toString() ?? '';
-      customerPhone =
-          customerData['phone']?.toString() ?? '';
-
-      customerAddress =
-          customerData['address']?.toString() ?? '';
-    } else {
-      customerName =
-          customerData?.toString() ?? '';
+      customerName = customerData['name']?.toString() ?? '';
+      customerPhone = customerData['phone']?.toString() ?? '';
+      customerAddress = customerData['address']?.toString() ?? '';
+    }
+    else {
+      customerName = customerData?.toString() ?? '';
     }
 
     return OrderModel(
@@ -59,17 +55,12 @@ class OrderModel {
       phone: customerPhone,
       address: customerAddress,
       orderDate: data['orderDate']?.toString() ?? '',
-      paymentMethod:
-      data['paymentMethod']?.toString() ?? '',
-      subtotal:
-      (data['subtotal'] ?? 0).toDouble(),
-      deliveryFee:
-      (data['deliveryFee'] ?? 0).toDouble(),
-      totalPrice:
-      (data['totalPrice'] ?? 0).toDouble(),
+      paymentMethod: data['paymentMethod']?.toString() ?? '',
+      subtotal: (data['subtotal'] ?? 0).toDouble(),
+      deliveryFee: (data['deliveryFee'] ?? 0).toDouble(),
+      totalPrice: (data['totalPrice'] ?? 0).toDouble(),
       items: data['items'],
-      status:
-      data['status']?.toString() ?? 'Pending',
+      status: data['status']?.toString() ?? 'Pending',
     );
   }
 }

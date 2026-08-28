@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:io';
 
 class PaymentService {
   static const String _backendUrl =
@@ -15,43 +15,53 @@ class PaymentService {
     required String exp,
     required String cvv,
   }) async {
+    final client = HttpClient();
+
     try {
-      final response = await http.post(
-        Uri.parse(_backendUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'amount': amount,
-          'userId': userId,
-          'orderId': orderId,
-          'email': email,
-          'name': name,
-          'accountNumber': accountNumber,
-          'exp': '${exp.substring(0, 2)}/${exp.substring(2, 4)}',
-          'cvv': cvv,
-        }),
-      );
+      final uri = Uri.parse(_backendUrl);
+      final request = await client.postUrl(uri);
+
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+
+      final payload = jsonEncode({
+        'amount': amount,
+        'userId': userId,
+        'orderId': orderId,
+        'email': email,
+        'name': name,
+        'accountNumber': accountNumber,
+        'exp': exp,
+        'cvv': cvv,
+      });
+
+      final payloadBytes = utf8.encode(payload);
+
+      request.headers.set(HttpHeaders.contentLengthHeader, payloadBytes.length);
+      request.add(payloadBytes);
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
 
       print("Stripe Status Code: ${response.statusCode}");
-      print("Stripe Response: ${response.body}");
+      print("Stripe Response: $responseBody");
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(responseBody);
 
         print("Payment Response: $data");
 
         return Map<String, dynamic>.from(data);
-      }
-      else {
+      } else {
         print("Payment Error Status: ${response.statusCode}");
-        print("Payment Error Body: ${response.body}");
+        print("Payment Error Body: $responseBody");
         return null;
       }
-
     } catch (e) {
       print("Payment Service Error: $e");
       return null;
+    } finally {
+      client.close();
     }
   }
+
 }

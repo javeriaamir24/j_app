@@ -1,12 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-final DatabaseReference usersRef =
-FirebaseDatabase.instance.ref("users");
+final DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
 
-String get userId {
-  return FirebaseAuth.instance.currentUser!.uid;
-}
+String get userId {return FirebaseAuth.instance.currentUser!.uid;}
 
 Future<List<Map<String, dynamic>>> getCartItems() async {
   final snapshot = await usersRef

@@ -14,8 +14,7 @@ class CoffeeDetailPage extends StatefulWidget {
   });
 
   @override
-  State<CoffeeDetailPage> createState() =>
-      _CoffeeDetailPageState();
+  State<CoffeeDetailPage> createState() => _CoffeeDetailPageState();
 }
 
 class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
@@ -25,161 +24,11 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
 
   static const Color brown = Color(0xFFC67C4E);
 
-  String get productId {
-    return widget.coffee["id"]?.toString() ??
-        widget.coffee["productId"]?.toString() ??
-        "";
-  }
-
-  String get coffeeName {
-    return widget.coffee["name"]?.toString() ?? "Coffee";
-  }
-
-  String get coffeeImage {
-    return widget.coffee["image"]?.toString() ?? "";
-  }
-
-  String get coffeeDescription {
-    return widget.coffee["detailedDescription"]?.toString() ??
-        widget.coffee["description"]?.toString() ??
-        "No description available.";
-  }
-
-  double get coffeePrice {
-    final price = widget.coffee["price"];
-
-    if (price is num) {
-      return price.toDouble();
-    }
-
-    return double.tryParse(price?.toString() ?? "0") ?? 0.0;
-  }
 
   @override
   void initState() {
     super.initState();
     loadQuantity();
-  }
-
-  Future<void> loadQuantity() async {
-    if (productId.isEmpty) {
-      if (!mounted) return;
-
-      setState(() {
-        quantity = 0;
-        loading = false;
-      });
-
-      return;
-    }
-
-    final currentQuantity = await getQuantity(productId);
-
-    if (!mounted) return;
-
-    setState(() {
-      quantity = currentQuantity;
-      loading = false;
-    });
-  }
-
-  Future<void> addItem() async {
-    if (productId.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Product information is missing",
-      );
-      return;
-    }
-
-    await addToCart(
-      widget.coffee,
-      productId,
-    );
-
-    await loadQuantity();
-
-    Fluttertoast.showToast(
-      msg: "Added to Cart",
-    );
-  }
-
-  Future<void> increaseItem() async {
-    if (productId.isEmpty) return;
-
-    await increaseQuantity(productId);
-
-    await loadQuantity();
-  }
-
-  Future<void> decreaseItem() async {
-    if (productId.isEmpty) return;
-
-    await decreaseQuantity(productId);
-
-    await loadQuantity();
-  }
-
-  Widget buildCoffeeImage() {
-    if (coffeeImage.isEmpty) {
-      return Container(
-        width: double.infinity,
-        height: 280,
-        color: Colors.grey.shade200,
-        child: const Icon(
-          Icons.coffee,
-          size: 60,
-          color: Colors.black87,
-        ),
-      );
-    }
-
-    if (coffeeImage.startsWith("http")) {
-      return Image.network(
-        coffeeImage,
-        width: double.infinity,
-        height: 280,
-        fit: BoxFit.cover,
-        errorBuilder: (
-            context,
-            error,
-            stackTrace,
-            ) {
-          return Container(
-            width: double.infinity,
-            height: 280,
-            color: Colors.grey.shade200,
-            child: const Icon(
-              Icons.broken_image,
-              size: 50,
-              color: Colors.grey,
-            ),
-          );
-        },
-      );
-    }
-
-    return Image.asset(
-      coffeeImage,
-      width: double.infinity,
-      height: 280,
-      fit: BoxFit.cover,
-      errorBuilder: (
-          context,
-          error,
-          stackTrace,
-          ) {
-        return Container(
-          width: double.infinity,
-          height: 280,
-          color: Colors.grey.shade200,
-          child: const Icon(
-            Icons.coffee,
-            size: 50,
-            color: Colors.black87,
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -394,6 +243,158 @@ class _CoffeeDetailPageState extends State<CoffeeDetailPage> {
           selectedIndex: 0,
         ),
       ),
+    );
+  }
+
+  String get productId {
+    return widget.coffee["id"]?.toString() ??
+        widget.coffee["productId"]?.toString() ??
+        "";
+  }
+
+  String get coffeeName {
+    return widget.coffee["name"]?.toString() ?? "Coffee";
+  }
+
+  String get coffeeImage {
+    return widget.coffee["image"]?.toString() ?? "";
+  }
+
+  String get coffeeDescription {
+    return widget.coffee["detailedDescription"]?.toString() ??
+        widget.coffee["description"]?.toString() ??
+        "No description available.";
+  }
+
+  double get coffeePrice {
+    final price = widget.coffee["price"];
+
+    if (price is num) {
+      return price.toDouble();
+    }
+
+    return double.tryParse(price?.toString() ?? "0") ?? 0.0;
+  }
+
+
+  Future<void> loadQuantity() async {
+    if (productId.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        quantity = 0;
+        loading = false;
+      });
+
+      return;
+    }
+
+    final currentQuantity = await getQuantity(productId);
+
+    if (!mounted) return;
+
+    setState(() {
+      quantity = currentQuantity;
+      loading = false;
+    });
+  }
+
+  Future<void> addItem() async {
+    if (productId.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Product information is missing",
+      );
+      return;
+    }
+
+    await addToCart(
+      widget.coffee,
+      productId,
+    );
+
+    await loadQuantity();
+
+    Fluttertoast.showToast(
+      msg: "Added to Cart",
+    );
+  }
+
+  Future<void> increaseItem() async {
+    if (productId.isEmpty) return;
+
+    await increaseQuantity(productId);
+
+    await loadQuantity();
+  }
+
+  Future<void> decreaseItem() async {
+    if (productId.isEmpty) return;
+
+    await decreaseQuantity(productId);
+
+    await loadQuantity();
+  }
+
+  Widget buildCoffeeImage() {
+    if (coffeeImage.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: 280,
+        color: Colors.grey.shade200,
+        child: const Icon(
+          Icons.coffee,
+          size: 60,
+          color: Colors.black87,
+        ),
+      );
+    }
+
+    if (coffeeImage.startsWith("http")) {
+      return Image.network(
+        coffeeImage,
+        width: double.infinity,
+        height: 280,
+        fit: BoxFit.cover,
+        errorBuilder: (
+            context,
+            error,
+            stackTrace,
+            ) {
+          return Container(
+            width: double.infinity,
+            height: 280,
+            color: Colors.grey.shade200,
+            child: const Icon(
+              Icons.broken_image,
+              size: 50,
+              color: Colors.grey,
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      coffeeImage,
+      width: double.infinity,
+      height: 280,
+      fit: BoxFit.cover,
+      errorBuilder: (
+          context,
+          error,
+          stackTrace,
+          ) {
+        return Container(
+          width: double.infinity,
+          height: 280,
+          color: Colors.grey.shade200,
+          child: const Icon(
+            Icons.coffee,
+            size: 50,
+            color: Colors.black87,
+          ),
+        );
+      },
     );
   }
 }

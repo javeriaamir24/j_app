@@ -73,7 +73,6 @@ class _WishlistButtonState extends State<WishlistButton> {
         msg: "Removed from Wishlist",
       );
 
-      // Tell parent that wishlist changed
       widget.onChanged?.call();
 
     } else {
@@ -93,7 +92,6 @@ class _WishlistButtonState extends State<WishlistButton> {
         msg: "Added to Wishlist",
       );
 
-      // Tell parent that wishlist changed
       widget.onChanged?.call();
     }
   }

@@ -15,9 +15,7 @@ class OrderHistoryPage extends StatefulWidget {
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
   static const Color brown = Color(0xFFC67C4E);
 
-  Future<void> _addSelectedItemsToCart(
-      List<Map<String, dynamic>> selectedItems,
-      ) async {
+  Future<void> _addSelectedItemsToCart(List<Map<String, dynamic>> selectedItems,) async {
     for (final item in selectedItems) {
       final productId =
           item["productId"]?.toString() ??
@@ -30,12 +28,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         "id": productId,
         "name": item["name"] ?? "",
         "description": item["description"] ?? "",
-        "detailedDescription":
-        item["detailedDescription"] ??
-            item["description"] ??
-            "",
-        "image": item["image"] ?? "",
-        "price": item["price"] ?? 0,
+        "detailedDescription": item["detailedDescription"] ?? item["description"] ?? "", "image": item["image"] ?? "", "price": item["price"] ?? 0,
       };
 
       await addToCart(coffee, productId);
@@ -97,9 +90,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     return orders;
   }
 
-  Future<void> _showReorderDialog(
-      List<Map<String, dynamic>> items,
-      ) async {
+  Future<void> _showReorderDialog(List<Map<String, dynamic>> items,) async {
     final Set<int> selectedItems = {};
 
     await showDialog(

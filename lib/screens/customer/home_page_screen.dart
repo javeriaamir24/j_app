@@ -26,343 +26,32 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   FirebaseAuth auth = FirebaseAuth.instance;
 
-  final FlutterSecureStorage _storage =
-  const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  int wishlistRefresh = 0;
 
-  bool get isFiltering {
-    return searchController.text.trim().isNotEmpty ||
-        selectedPriceRange != "All";
-  }
 
   List<String> categories = ["All Coffee"];
-
   List<String> sliderImages = [
     "assets/images/coffee_background.webp",
     "assets/images/coffee_icons.jpg",
     "assets/images/coffee_themed.avif",
   ];
-
   List<Map<String, dynamic>> coffees = [];
 
-  Future<void> loadCoffees() async {
-    final data = await CoffeeService().getCoffees();
 
-    if (!mounted) return;
-
-    setState(() {
-      coffees = data;
-      isLoading = false;
-    });
-  }
-
-  Future<void> loadCategories() async {
-    final snapshot =
-    await FirebaseDatabase.instance.ref('coffees').get();
-
-    if (!snapshot.exists || snapshot.value == null) {
-      return;
-    }
-
-    final data = Map<dynamic, dynamic>.from(
-      snapshot.value as Map,
-    );
-
-    final categorySet = <String>{};
-
-    for (final coffee in data.values) {
-      final coffeeData =
-      Map<dynamic, dynamic>.from(coffee);
-
-      final category =
-      coffeeData['category']?.toString().trim();
-
-      if (category != null && category.isNotEmpty) {
-        categorySet.add(category);
-      }
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      categories = [
-        "All Coffee",
-        ...categorySet,
-      ];
-    });
-  }
-
-  bool matchesPrice(num price) {
-    if (selectedPriceRange == "Under \$3") {
-      return price < 3;
-    }
-
-    if (selectedPriceRange == "\$3 - \$4") {
-      return price >= 3 && price <= 4;
-    }
-
-    if (selectedPriceRange == "Above \$4") {
-      return price > 4;
-    }
-
-    return true;
-  }
-
-  void selectCoffee(String coffee) {
-    setState(() {
-      selectedCoffee = coffee;
-    });
-  }
-
-  Future<void> signout() async {
-    final bool? remember =
-    await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Sign Out",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: const Text(
-            "Do you want this device to remember your login?",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-              child: const Text(
-                "No",
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              child: const Text(
-                "Yes",
-                style: TextStyle(
-                  color: Color(0xFFC67C4E),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (remember == null) {
-      return;
-    }
-
-    if (remember == false) {
-      await _storage.delete(
-        key: 'saved_email',
-      );
-
-      await _storage.delete(
-        key: 'saved_password',
-      );
-
-      await _storage.write(
-        key: 'remember_login',
-        value: 'false',
-      );
-
-      await FirebaseAuth.instance.signOut();
-
-      if (!mounted) {
-        return;
-      }
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-          const FirstScreen(),
-        ),
-            (route) => false,
-      );
-
-      return;
-    }
-
-    await _storage.write(
-      key: 'remember_login',
-      value: 'true',
-    );
-
-    await FirebaseAuth.instance.signOut();
-
-    if (!mounted) {
-      return;
-    }
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-        const SavedScreen(),
-      ),
-          (route) => false,
-    );
-  }
-
-  void showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.grey.shade900,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom:
-                MediaQuery.of(context).viewInsets.bottom +
-                    20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: const Icon(
-                        Icons.cancel,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-
-                  TextField(
-                    controller: searchController,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                    ),
-                    onChanged: (value) {
-                      setModalState(() {});
-                      setState(() {});
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Search Coffee",
-                      hintStyle: const TextStyle(
-                        color: Colors.white70,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: Colors.white70,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade800,
-                      border: OutlineInputBorder(
-                        borderRadius:
-                        BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    "Price Range",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      "All",
-                      "Under \$3",
-                      "\$3 - \$4",
-                      "Above \$4"
-                    ].map((range) {
-                      return ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-
-                          setModalState(() {
-                            selectedPriceRange = range;
-                          });
-
-                          setState(() {});
-                        },
-                        style:
-                        ElevatedButton.styleFrom(
-                          backgroundColor:
-                          selectedPriceRange == range
-                              ? const Color(
-                            0xFFC67C4E,
-                          )
-                              : Colors.white,
-                        ),
-                        child: Text(
-                          range,
-                          style: TextStyle(
-                            color:
-                            selectedPriceRange ==
-                                range
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 10),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  TextEditingController searchController =
-  TextEditingController();
-
-  PageController pageController =
-  PageController();
+  TextEditingController searchController = TextEditingController();
+  PageController pageController = PageController();
 
   String selectedCoffee = "All Coffee";
-
   String selectedPriceRange = "All";
 
+  bool get isFiltering {
+    return searchController.text.trim().isNotEmpty ||
+        selectedPriceRange != "All";
+  }
   bool isLoading = true;
 
+  int wishlistRefresh = 0;
   int currentPage = 0;
 
   Timer? sliderTimer;
@@ -650,9 +339,6 @@ class _HomePageState extends State<HomePage> {
               },
             ),
 
-            // =========================
-            // DRAWER WISHLIST
-            // =========================
             ListTile(
               title: const Text(
                 "Wishlist",
@@ -661,10 +347,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               onTap: () async {
-                // Close drawer
                 Navigator.pop(context);
 
-                // Open wishlist and WAIT
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -673,7 +357,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
 
-                // Refresh after returning
                 if (!mounted) return;
 
                 setState(() {
@@ -1161,4 +844,311 @@ class _HomePageState extends State<HomePage> {
         ),
     );
   }
+
+
+  Future<void> loadCoffees() async {
+    final data = await CoffeeService().getCoffees();
+
+    if (!mounted) return;
+
+    setState(() {
+      coffees = data;
+      isLoading = false;
+    });
+  }
+
+  Future<void> loadCategories() async {
+    final snapshot =
+    await FirebaseDatabase.instance.ref('coffees').get();
+
+    if (!snapshot.exists || snapshot.value == null) {
+      return;
+    }
+
+    final data = Map<dynamic, dynamic>.from(
+      snapshot.value as Map,
+    );
+
+    final categorySet = <String>{};
+
+    for (final coffee in data.values) {
+      final coffeeData =
+      Map<dynamic, dynamic>.from(coffee);
+
+      final category =
+      coffeeData['category']?.toString().trim();
+
+      if (category != null && category.isNotEmpty) {
+        categorySet.add(category);
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      categories = [
+        "All Coffee",
+        ...categorySet,
+      ];
+    });
+  }
+
+  bool matchesPrice(num price) {
+    if (selectedPriceRange == "Under \$3") {
+      return price < 3;
+    }
+
+    if (selectedPriceRange == "\$3 - \$4") {
+      return price >= 3 && price <= 4;
+    }
+
+    if (selectedPriceRange == "Above \$4") {
+      return price > 4;
+    }
+
+    return true;
+  }
+
+  void selectCoffee(String coffee) {
+    setState(() {
+      selectedCoffee = coffee;
+    });
+  }
+
+  Future<void> signout() async {
+    final bool? remember =
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            "Sign Out",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            "Do you want this device to remember your login?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text(
+                "No",
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text(
+                "Yes",
+                style: TextStyle(
+                  color: Color(0xFFC67C4E),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (remember == null) {
+      return;
+    }
+
+    if (remember == false) {
+      await _storage.delete(
+        key: 'saved_email',
+      );
+
+      await _storage.delete(
+        key: 'saved_password',
+      );
+
+      await _storage.write(
+        key: 'remember_login',
+        value: 'false',
+      );
+
+      await FirebaseAuth.instance.signOut();
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+          const FirstScreen(),
+        ),
+            (route) => false,
+      );
+
+      return;
+    }
+
+    await _storage.write(
+      key: 'remember_login',
+      value: 'true',
+    );
+
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+        const SavedScreen(),
+      ),
+          (route) => false,
+    );
+  }
+
+  void showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.grey.shade900,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom:
+                MediaQuery.of(context).viewInsets.bottom +
+                    20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(
+                        Icons.cancel,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+
+                  TextField(
+                    controller: searchController,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                    ),
+                    onChanged: (value) {
+                      setModalState(() {});
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      hintText: "Search Coffee",
+                      hintStyle: const TextStyle(
+                        color: Colors.white70,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white70,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade800,
+                      border: OutlineInputBorder(
+                        borderRadius:
+                        BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Price Range",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      "All",
+                      "Under \$3",
+                      "\$3 - \$4",
+                      "Above \$4"
+                    ].map((range) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+
+                          setModalState(() {
+                            selectedPriceRange = range;
+                          });
+
+                          setState(() {});
+                        },
+                        style:
+                        ElevatedButton.styleFrom(
+                          backgroundColor:
+                          selectedPriceRange == range
+                              ? const Color(
+                            0xFFC67C4E,
+                          )
+                              : Colors.white,
+                        ),
+                        child: Text(
+                          range,
+                          style: TextStyle(
+                            color:
+                            selectedPriceRange ==
+                                range
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 10),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
 }

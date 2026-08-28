@@ -30,10 +30,6 @@ class _SavedScreenState extends State<SavedScreen> {
     loadSavedEmail();
   }
 
-  // =========================================================
-  // LOAD SAVED EMAIL
-  // =========================================================
-
   Future<void> loadSavedEmail() async {
 
     final email = await _storage.read(
@@ -49,10 +45,6 @@ class _SavedScreenState extends State<SavedScreen> {
     });
   }
 
-  // =========================================================
-  // CONTINUE LOGIN
-  // =========================================================
-
   Future<void> continueLogin() async {
 
     setState(() {
@@ -61,7 +53,6 @@ class _SavedScreenState extends State<SavedScreen> {
 
     try {
 
-      // GET SAVED LOGIN DETAILS
 
       final email = await _storage.read(
         key: 'saved_email',
@@ -71,7 +62,6 @@ class _SavedScreenState extends State<SavedScreen> {
         key: 'saved_password',
       );
 
-      // IF DETAILS ARE MISSING
 
       if (email == null || password == null) {
 
@@ -80,9 +70,6 @@ class _SavedScreenState extends State<SavedScreen> {
         return;
       }
 
-      // =====================================================
-      // FIREBASE LOGIN
-      // =====================================================
 
       final UserCredential credential =
       await FirebaseAuth.instance
@@ -97,16 +84,12 @@ class _SavedScreenState extends State<SavedScreen> {
         throw Exception("User not found");
       }
 
-      // Refresh Firebase user
 
       await user.reload();
 
       final currentUser =
           FirebaseAuth.instance.currentUser;
 
-      // =====================================================
-      // CHECK EMAIL VERIFICATION
-      // =====================================================
 
       if (currentUser == null ||
           !currentUser.emailVerified) {
@@ -116,9 +99,6 @@ class _SavedScreenState extends State<SavedScreen> {
         throw Exception("Email not verified");
       }
 
-      // =====================================================
-      // GET USER ROLE
-      // =====================================================
 
       final snapshot =
       await FirebaseDatabase.instance
@@ -167,9 +147,6 @@ class _SavedScreenState extends State<SavedScreen> {
         return;
       }
 
-      // =====================================================
-      // INVALID ROLE
-      // =====================================================
 
       await FirebaseAuth.instance.signOut();
 
@@ -244,10 +221,6 @@ class _SavedScreenState extends State<SavedScreen> {
     }
   }
 
-  // =========================================================
-  // GO TO LOGIN
-  // =========================================================
-
   Future<void> goToLogin() async {
 
     await _storage.delete(
@@ -266,10 +239,6 @@ class _SavedScreenState extends State<SavedScreen> {
       ),
     );
   }
-
-  // =========================================================
-  // USE ANOTHER ACCOUNT
-  // =========================================================
 
   Future<void> useAnotherAccount() async {
 
@@ -299,10 +268,6 @@ class _SavedScreenState extends State<SavedScreen> {
       ),
     );
   }
-
-  // =========================================================
-  // UI
-  // =========================================================
 
   @override
   Widget build(BuildContext context) {

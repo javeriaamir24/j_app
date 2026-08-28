@@ -20,6 +20,7 @@ class AdminChat extends StatefulWidget {
 }
 
 class _AdminChatState extends State<AdminChat> {
+
   final TextEditingController messageController = TextEditingController();
   final FirebaseAuth auth = FirebaseAuth.instance;
   final Set<String> expandedMessages = {};
@@ -37,146 +38,6 @@ class _AdminChatState extends State<AdminChat> {
     super.dispose();
   }
 
-  void markMessagesAsRead(List<MapEntry> messages) {
-
-    for (final entry in messages) {
-
-      final message = Map<dynamic, dynamic>.from(entry.value);
-
-      final isFromCustomer = message["senderType"] == "customer";
-
-      final alreadyRead = message["isRead"] == true;
-
-      if (isFromCustomer && !alreadyRead) {
-        messagesRef.child(entry.key.toString()).update({
-          "isRead": true,
-        });
-      }
-    }
-  }
-  void scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(
-          _scrollController.position.maxScrollExtent,
-        );
-      }
-    });
-  }
-  Future<void> sendMessage() async {
-    final message = messageController.text.trim();
-
-    if (message.isEmpty) {
-      return;
-    }
-
-    final admin = auth.currentUser;
-
-    if (admin == null) {
-      return;
-    }
-
-    final messageRef = messagesRef.push();
-
-    await messageRef.set({
-      "senderId": admin.uid,
-      "senderType": "admin",
-      "receiverId": widget.customerId,
-      "message": message,
-      "timestamp": ServerValue.timestamp,
-      "isRead": false,
-    });
-
-    messageController.clear();
-
-    await NotificationSender.sendNotification(
-      receiverId: widget.customerId,
-      senderName: "Customer Support",
-      message: message,
-      type: "chat_admin",
-      senderId: auth.currentUser?.uid,
-    );
-
-  }
-  String formatTime(dynamic timestamp) {
-
-    if (timestamp == null) {
-      return "";
-    }
-
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-      int.parse(timestamp.toString()),
-    );
-
-    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour == 0 ? 12 : dateTime.hour;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = dateTime.hour >= 12 ? "PM" : "AM";
-    return "$hour:$minute $period";
-  }
-  String formatDate(dynamic timestamp) {
-
-    if (timestamp == null) {
-      return "";
-    }
-
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-      int.parse(timestamp.toString()),
-    );
-
-    final now = DateTime.now();
-
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate =
-    DateTime(dateTime.year, dateTime.month, dateTime.day);
-
-    if (messageDate == today) {
-      return "Today";
-    }
-
-    if (messageDate == yesterday) {
-      return "Yesterday";
-    }
-
-    const weekdays = [
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
-    ];
-
-    const months = [
-      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
-    ];
-
-    final weekday = weekdays[dateTime.weekday - 1];
-    final month = months[dateTime.month - 1];
-
-    return "$weekday, ${dateTime.day} $month ${dateTime.year}";
-  }
-  bool isNewDay(List<MapEntry> messages, int index) {
-
-    if (index == 0) {
-      return true;
-    }
-
-    final currentMessage = Map<dynamic, dynamic>.from(messages[index].value);
-
-    final previousMessage = Map<dynamic, dynamic>.from(messages[index - 1].value);
-
-    final currentTime = int.parse(
-      (currentMessage["timestamp"] ?? 0).toString(),
-    );
-
-    final previousTime = int.parse(
-      (previousMessage["timestamp"] ?? 0).toString(),
-    );
-
-    final currentDate = DateTime.fromMillisecondsSinceEpoch(currentTime);
-
-    final previousDate = DateTime.fromMillisecondsSinceEpoch(previousTime);
-
-
-
-    return currentDate.year != previousDate.year || currentDate.month != previousDate.month || currentDate.day != previousDate.day;
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -520,4 +381,152 @@ class _AdminChatState extends State<AdminChat> {
       ),
     );
   }
+
+  //functions
+  void markMessagesAsRead(List<MapEntry> messages) {
+
+    for (final entry in messages) {
+
+      final message = Map<dynamic, dynamic>.from(entry.value);
+
+      final isFromCustomer = message["senderType"] == "customer";
+
+      final alreadyRead = message["isRead"] == true;
+
+      if (isFromCustomer && !alreadyRead) {
+        messagesRef.child(entry.key.toString()).update({
+          "isRead": true,
+        });
+      }
+    }
+  }
+
+  void scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(
+          _scrollController.position.maxScrollExtent,
+        );
+      }
+    });
+  }
+
+  Future<void> sendMessage() async {
+    final message = messageController.text.trim();
+
+    if (message.isEmpty) {
+      return;
+    }
+
+    final admin = auth.currentUser;
+
+    if (admin == null) {
+      return;
+    }
+
+    final messageRef = messagesRef.push();
+
+    await messageRef.set({
+      "senderId": admin.uid,
+      "senderType": "admin",
+      "receiverId": widget.customerId,
+      "message": message,
+      "timestamp": ServerValue.timestamp,
+      "isRead": false,
+    });
+
+    messageController.clear();
+
+    await NotificationSender.sendNotification(
+      receiverId: widget.customerId,
+      senderName: "Customer Support",
+      message: message,
+      type: "chat_admin",
+      senderId: auth.currentUser?.uid,
+    );
+
+  }
+
+  String formatTime(dynamic timestamp) {
+
+    if (timestamp == null) {
+      return "";
+    }
+
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(timestamp.toString()),
+    );
+
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour == 0 ? 12 : dateTime.hour;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? "PM" : "AM";
+    return "$hour:$minute $period";
+  }
+
+  String formatDate(dynamic timestamp) {
+
+    if (timestamp == null) {
+      return "";
+    }
+
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(timestamp.toString()),
+    );
+
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate =
+    DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (messageDate == today) {
+      return "Today";
+    }
+
+    if (messageDate == yesterday) {
+      return "Yesterday";
+    }
+
+    const weekdays = [
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    ];
+
+    const months = [
+      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
+    ];
+
+    final weekday = weekdays[dateTime.weekday - 1];
+    final month = months[dateTime.month - 1];
+
+    return "$weekday, ${dateTime.day} $month ${dateTime.year}";
+  }
+
+  bool isNewDay(List<MapEntry> messages, int index) {
+
+    if (index == 0) {
+      return true;
+    }
+
+    final currentMessage = Map<dynamic, dynamic>.from(messages[index].value);
+
+    final previousMessage = Map<dynamic, dynamic>.from(messages[index - 1].value);
+
+    final currentTime = int.parse(
+      (currentMessage["timestamp"] ?? 0).toString(),
+    );
+
+    final previousTime = int.parse(
+      (previousMessage["timestamp"] ?? 0).toString(),
+    );
+
+    final currentDate = DateTime.fromMillisecondsSinceEpoch(currentTime);
+
+    final previousDate = DateTime.fromMillisecondsSinceEpoch(previousTime);
+
+
+
+    return currentDate.year != previousDate.year || currentDate.month != previousDate.month || currentDate.day != previousDate.day;
+  }
+
 }

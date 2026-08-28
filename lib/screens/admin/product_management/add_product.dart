@@ -16,6 +16,7 @@ class AddProductPage extends StatefulWidget {
 }
 
 class _AddProductPageState extends State<AddProductPage> {
+
   final ProductService _productService = ProductService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -29,164 +30,6 @@ class _AddProductPageState extends State<AddProductPage> {
   FilePickerResult? result;
   File? _selectedImage;
 
-  Future<void> pickImage() async {
-    final pickedResult = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
-
-    if (pickedResult != null &&
-        pickedResult.files.single.path != null) {
-      setState(() {
-        result = pickedResult;
-        _selectedImage = File(
-          pickedResult.files.single.path!,
-        );
-      });
-    }
-  }
-
-  Future<String?> uploadImage(File imageFile) async {
-    final cloudName = 'qaakxnsu';
-    final uploadPreset = 'cafe_products';
-
-    final url = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
-    );
-
-    final request = http.MultipartRequest(
-      'POST',
-      url,
-    );
-
-    request.fields['upload_preset'] = uploadPreset;
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        imageFile.path,
-      ),
-    );
-
-    try {
-      final response = await request.send();
-
-      final responseData =
-      await response.stream.bytesToString();
-
-      print('==============================');
-      print('CLOUDINARY STATUS: ${response.statusCode}');
-      print('CLOUDINARY RESPONSE: $responseData');
-      print('==============================');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(responseData);
-
-        return data['secure_url'];
-      }
-
-      return null;
-    } catch (e) {
-      print('CLOUDINARY ERROR: $e');
-      return null;
-    }
-  }
-
-  Future<void> _addProduct() async {
-    final name = _nameController.text.trim();
-    final priceText = _priceController.text.trim();
-    final description = _descriptionController.text.trim();
-    final detailedDescription =
-    _detailedDescriptionController.text.trim();
-    final category = _categoryController.text.trim();
-
-    if (name.isEmpty ||
-        priceText.isEmpty ||
-        description.isEmpty ||
-        detailedDescription.isEmpty ||
-        category.isEmpty) {
-      Fluttertoast.showToast(
-        msg: 'Please fill all fields',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-
-      return;
-    }
-
-    final price = double.tryParse(priceText);
-
-    if (price == null) {
-      Fluttertoast.showToast(
-        msg: 'Please enter a valid price',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // =========================
-      // UPLOAD IMAGE
-      // =========================
-
-      String? imageUrl;
-
-      if (_selectedImage != null) {
-        imageUrl = await uploadImage(
-          _selectedImage!,
-        );
-
-        if (imageUrl == null) {
-          throw Exception(
-            'Image upload failed',
-          );
-        }
-      }
-
-      // =========================
-      // SAVE PRODUCT TO FIREBASE
-      // =========================
-
-      await _productService.addProduct(
-        name: name,
-        price: price,
-        category: category,
-        description: description,
-        detailedDescription: detailedDescription,
-        popular: _popular,
-        imageUrl: imageUrl,
-      );
-
-      Fluttertoast.showToast(
-        msg: 'Product added successfully',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print('Add product error: $e');
-
-      Fluttertoast.showToast(
-        msg: 'Failed to add product',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -510,4 +353,165 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
+
+  //functions
+  Future<void> pickImage() async {
+    final pickedResult = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (pickedResult != null &&
+        pickedResult.files.single.path != null) {
+      setState(() {
+        result = pickedResult;
+        _selectedImage = File(
+          pickedResult.files.single.path!,
+        );
+      });
+    }
+  }
+
+  Future<String?> uploadImage(File imageFile) async {
+    final cloudName = 'qaakxnsu';
+    final uploadPreset = 'cafe_products';
+
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
+
+    final request = http.MultipartRequest(
+      'POST',
+      url,
+    );
+
+    request.fields['upload_preset'] = uploadPreset;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+      ),
+    );
+
+    try {
+      final response = await request.send();
+
+      final responseData =
+      await response.stream.bytesToString();
+
+      print('==============================');
+      print('CLOUDINARY STATUS: ${response.statusCode}');
+      print('CLOUDINARY RESPONSE: $responseData');
+      print('==============================');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(responseData);
+
+        return data['secure_url'];
+      }
+
+      return null;
+    } catch (e) {
+      print('CLOUDINARY ERROR: $e');
+      return null;
+    }
+  }
+
+  Future<void> _addProduct() async {
+    final name = _nameController.text.trim();
+    final priceText = _priceController.text.trim();
+    final description = _descriptionController.text.trim();
+    final detailedDescription =
+    _detailedDescriptionController.text.trim();
+    final category = _categoryController.text.trim();
+
+    if (name.isEmpty ||
+        priceText.isEmpty ||
+        description.isEmpty ||
+        detailedDescription.isEmpty ||
+        category.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Please fill all fields',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+
+      return;
+    }
+
+    final price = double.tryParse(priceText);
+
+    if (price == null) {
+      Fluttertoast.showToast(
+        msg: 'Please enter a valid price',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // =========================
+      // UPLOAD IMAGE
+      // =========================
+
+      String? imageUrl;
+
+      if (_selectedImage != null) {
+        imageUrl = await uploadImage(
+          _selectedImage!,
+        );
+
+        if (imageUrl == null) {
+          throw Exception(
+            'Image upload failed',
+          );
+        }
+      }
+
+      // =========================
+      // SAVE PRODUCT TO FIREBASE
+      // =========================
+
+      await _productService.addProduct(
+        name: name,
+        price: price,
+        category: category,
+        description: description,
+        detailedDescription: detailedDescription,
+        popular: _popular,
+        imageUrl: imageUrl,
+      );
+
+      Fluttertoast.showToast(
+        msg: 'Product added successfully',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print('Add product error: $e');
+
+      Fluttertoast.showToast(
+        msg: 'Failed to add product',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
 }

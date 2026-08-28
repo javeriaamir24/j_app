@@ -16,6 +16,7 @@ class EditOrderPage extends StatefulWidget {
   State<EditOrderPage> createState() => _EditOrderPageState();
 }
 
+
 class _EditOrderPageState extends State<EditOrderPage> {
   static const Color brown = Color(0xFFC67C4E);
 
@@ -36,42 +37,6 @@ class _EditOrderPageState extends State<EditOrderPage> {
     super.initState();
 
     _selectedStatus = widget.order.status;
-  }
-
-  Future<void> _updateStatus() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await updateOrderStatus(
-        widget.order.customerId,
-        widget.order.id,
-        _selectedStatus,
-      );
-
-      Fluttertoast.showToast(
-        msg: 'Order status updated successfully',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: 'Failed to update order status',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   @override
@@ -388,6 +353,45 @@ class _EditOrderPageState extends State<EditOrderPage> {
     );
   }
 
+
+
+  Future<void> _updateStatus() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await updateOrderStatus(
+        widget.order.customerId,
+        widget.order.id,
+        _selectedStatus,
+      );
+
+      Fluttertoast.showToast(
+        msg: 'Order status updated successfully',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: 'Failed to update order status',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+
   Widget _sectionTitle(String title) {
     return Text(
       title,
@@ -505,8 +509,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
   }
 
   Widget _buildImage(dynamic image) {
-    final path =
-        image?.toString() ?? "";
+    final path = image?.toString() ?? "";
 
     if (path.startsWith("http")) {
       return Image.network(

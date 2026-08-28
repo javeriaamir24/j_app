@@ -7,6 +7,7 @@ class Product {
   final String detailedDescription;
   final String image;
   final bool popular;
+  final bool showInSlider;
 
   Product({
     required this.id,
@@ -17,6 +18,7 @@ class Product {
     required this.detailedDescription,
     required this.image,
     required this.popular,
+    this.showInSlider = false,
   });
 
   factory Product.fromMap(
@@ -26,16 +28,26 @@ class Product {
     return Product(
       id: id,
       name: data['name']?.toString() ?? '',
-      price: double.tryParse(
-        data['price']?.toString() ?? '0',
-      ) ??
-          0,
+      price: double.tryParse(data['price']?.toString() ?? '0',) ?? 0,
       category: data['category']?.toString() ?? '',
       description: data['description']?.toString() ?? '',
       detailedDescription:
       data['detailedDescription']?.toString() ?? '',
       image: data['image']?.toString() ?? '',
       popular: data['popular'] == true,
+      showInSlider: data['showInSlider'] == true,
     );
+  }
+
+  Map<String, dynamic> toCoffeeMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'detailedDescription': detailedDescription,
+      'price': price,
+      'image': image,
+      'category': category,
+    };
   }
 }
